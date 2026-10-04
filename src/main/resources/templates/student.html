@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="et" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minu labori seis</title>
+  <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<h1>Minu labori seis</h1>
+<p th:if="${dbError}" class="badge">Andmebaas ei vasta</p>
+
+<div th:if="${student != null}">
+  <p class="muted" th:text="${student.name()} + ' · ' + ${student.courseCode()}">Kati · IS1-26</p>
+  <table>
+    <thead><tr><th>Labor</th><th>Kontroll</th><th>Seis</th><th>Sõnum</th><th>Host</th><th>Aeg</th></tr></thead>
+    <tbody>
+    <tr th:each="r : ${results}">
+      <td th:text="${r.lab()}">lab-01</td>
+      <td th:text="${r.check()}">nginx</td>
+      <td th:class="${r.status() == 'OK'} ? 'ok' : 'fail'" th:text="${r.status()}">OK</td>
+      <td th:text="${r.message()}">-</td>
+      <td th:text="${r.host()}">web01</td>
+      <td th:text="${fmt.time(r.receivedAt())}">-</td>
+    </tr>
+    <tr th:if="${results.isEmpty()}"><td colspan="6" class="muted">Tulemusi veel pole.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<footer class="muted">labori-seis <span th:text="${version}">dev</span></footer>
+</body>
+</html>

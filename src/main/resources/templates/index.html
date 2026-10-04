@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="et" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Labori seis</title>
+  <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<h1>Labori seis</h1>
+<p class="muted">Iga kontrolli viimane tulemus õppija ja labori kaupa.</p>
+
+<p th:if="${dbError}" class="badge">Andmebaas ei vasta</p>
+
+<div th:if="${view != null}">
+  <span th:if="${!view.cacheAvailable() and !view.fromCache()}" class="badge">Vahemälu ei vasta</span>
+  <span th:if="${view.fromCache()}" class="badge info">Vahemälust</span>
+
+  <table>
+    <thead>
+    <tr><th>Õppija</th><th>GitHub</th><th>Labor</th><th>OK</th><th>FAIL</th><th>Viimati</th></tr>
+    </thead>
+    <tbody>
+    <tr th:each="r : ${view.rows()}">
+      <td th:text="${r.student()}">Kati</td>
+      <td th:text="${r.github()}">kati</td>
+      <td th:text="${r.lab()}">lab-01</td>
+      <td class="ok" th:text="${r.ok()}">3</td>
+      <td th:classappend="${r.fail() > 0} ? 'fail'" th:text="${r.fail()}">0</td>
+      <td th:text="${fmt.time(r.last())}">-</td>
+    </tr>
+    <tr th:if="${view.rows().isEmpty()}"><td colspan="6" class="muted">Tulemusi veel pole.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<footer class="muted">labori-seis <span th:text="${version}">dev</span> · <a href="/health">/health</a> · <a href="/version">/version</a></footer>
+</body>
+</html>

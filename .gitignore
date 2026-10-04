@@ -1,0 +1,46 @@
+# Ehitus ja IDE
+target/
+*.war
+.idea/
+.vscode/
+
+# Saladused (koolitaja repo teed deploy/..., õppija repo teed k0N-...)
+.env
+secrets.env
+*.pem
+*_accessKeys.csv
+*_credentials.csv
+kubeconfig*
+k3s.yaml
+
+# K1 Bash
+deploy/bash/hosts
+deploy/bash/webhosts
+deploy/bash/logs/
+k01-bash/secrets.env
+k01-bash/logs/
+
+# K2 Ansible (run2.txt EI ole ignoreeritud: see on idempotentsuse tõend)
+deploy/ansible/group_vars/all/vault.yml
+deploy/ansible/ansible.log
+deploy/ansible/.vault_pass*
+k02-ansible/group_vars/all/vault.yml.dec
+k02-ansible/ansible.log
+k02-ansible/.vault_pass*
+
+# K3 Docker
+k03-docker/.env
+
+# K4 OpenTofu (.terraform.lock.hcl LÄHEB Giti)
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+terraform.tfvars
+*.auto.tfvars
+backend.hcl
+crash.log
+crash.*.log
+
+# Pilve kodutöö
+cloud/k04-aws/inventory-aws.ini

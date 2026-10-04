@@ -1,0 +1,11 @@
+:root { --ok: #1b7f3b; --fail: #b3261e; --muted: #666; --line: #ddd; }
+body { font-family: system-ui, sans-serif; margin: 2rem; color: #222; }
+h1 { margin-bottom: .2rem; }
+.muted { color: var(--muted); }
+table { border-collapse: collapse; margin-top: 1rem; min-width: 40rem; }
+th, td { border-bottom: 1px solid var(--line); padding: .4rem .8rem; text-align: left; }
+.ok { color: var(--ok); font-weight: 600; }
+.fail { color: var(--fail); font-weight: 600; }
+.badge { display: inline-block; padding: .2rem .6rem; border-radius: 1rem; background: #fde7e5; color: var(--fail); }
+.badge.info { background: #e8f0fe; color: #1a4fa0; }
+footer { margin-top: 2rem; font-size: .85rem; }

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!--
+    Spring Boot 3.5 on viimane rida, mis toetab Servlet 6.0 ehk Tomcat 10.1 (app01).
+    3.5.16 (25.06.2026) on 3.x viimane OSS-väljalase. Boot 4 vajab Tomcat 11 ja tuleb IS2-s.
+    Trivy näitab seetõttu aja jooksul uusi leide: see on teadlik õppematerjal (K5 plokk 3).
+  -->
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.5.16</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>ee.hkhk</groupId>
+  <artifactId>labori-seis</artifactId>
+  <version>1.1.0</version>
+  <packaging>war</packaging>
+  <name>labori-seis</name>
+  <description>Labori seis: kontrollskriptide tulemused ühel lehel</description>
+
+  <properties>
+    <java.version>21</java.version>
+    <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
+    <build.timestamp>${maven.build.timestamp}</build.timestamp>
+
+    <!-- Tööriistade versioonid ühes kohas -->
+    <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
+    <checkstyle.version>10.26.1</checkstyle.version>
+    <!-- JaCoCo 0.8.14+ toetab Java 25, 0.8.15 ka Java 26. Vanem JaCoCo + uuem JDK = instrumenteerimise viga -->
+    <jacoco.version>0.8.15</jacoco.version>
+    <sonar-plugin.version>5.8.0.7211</sonar-plugin.version>
+
+    <!-- Checkstyle kukutab vaikimisi ehituse. Jenkins (K6) võib anda -Dcheckstyle.failOnViolation=false,
+         kui otsuse peab tegema SonarQube'i kvaliteedivärav. -->
+    <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+
+    <!-- SonarQube (K6) loeb need failid. Mõlemad tekivad verify faasis: kõigepealt mvn verify, siis sonar:sonar -->
+    <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+    <sonar.java.checkstyle.reportPaths>${project.build.directory}/checkstyle-result.xml</sonar.java.checkstyle.reportPaths>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-thymeleaf</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-jdbc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-amqp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mariadb.jdbc</groupId>
+      <artifactId>mariadb-java-client</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <!-- Memcachedi klient. Boot ei halda selle versiooni, seega on see siin kirjas. -->
+    <dependency>
+      <groupId>net.spy</groupId>
+      <artifactId>spymemcached</artifactId>
+      <version>2.12.3</version>
+    </dependency>
+
+    <!-- Tomcat tuleb väliselt (app01 Tomcat 10.1). provided → WEB-INF/lib-provided, java -jar töötab samuti -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-tomcat</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <!-- Edasijõudnu (K6): mvn deploy Nexusesse. Aadress tuleb käsurealt, kasutaja settings.xml-ist (server id "nexus"):
+       mvn -s settings.xml deploy -DskipTests -Dnexus.url=http://nexus.lab:8081 -Dnexus.repo=labori-seis-oNN -->
+  <distributionManagement>
+    <repository>
+      <id>nexus</id>
+      <url>${nexus.url}/repository/${nexus.repo}/</url>
+    </repository>
+  </distributionManagement>
+
+  <build>
+    <finalName>labori-seis</finalName>
+
+    <pluginManagement>
+      <plugins>
+        <!-- mvn sonar:sonar kasutab seda versiooni, mitte "mis iganes on uusim": ehitus on korratav -->
+        <plugin>
+          <groupId>org.sonarsource.scanner.maven</groupId>
+          <artifactId>sonar-maven-plugin</artifactId>
+          <version>${sonar-plugin.version}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+
+      <!-- Checkstyle on seotud verify faasiga: "mvn -B verify" lokaalselt teeb sama mis CI.
+           package (Dockerfile, Jenkinsi build-etapp) seda ei käivita. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>${checkstyle-plugin.version}</version>
+        <configuration>
+          <configLocation>checkstyle.xml</configLocation>
+          <consoleOutput>true</consoleOutput>
+          <failOnViolation>${checkstyle.failOnViolation}</failOnViolation>
+          <violationSeverity>warning</violationSeverity>
+          <includeTestSourceDirectory>true</includeTestSourceDirectory>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>${checkstyle.version}</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>checkstyle</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.version}</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <!-- target/site/jacoco/index.html (inimesele) ja jacoco.xml: Sonar (K6) loeb target/site/jacoco/jacoco.xml, tekib verify faasis -->
+          <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

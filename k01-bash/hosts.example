@@ -1,0 +1,6 @@
+# hostinimi  IP  (kopeeri failiks "hosts" ja pane oma IP-d; üks host rea kohta)
+db01   10.10.1.15
+mc01   10.10.1.14
+rmq01  10.10.1.13
+app01  10.10.1.12
+web01  10.10.1.11
