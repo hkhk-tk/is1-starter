@@ -32,6 +32,13 @@ fail() { echo "FAIL: $*"; exit 1; }
 pass() { echo "OK: $*"; exit 0; }
 
 ref="${GITHUB_REF_NAME:-}"
+# Uuesti hindamisel (regrade) on ref submit/…: otsi päeva tag, mis osutab samale commit'ile.
+if [[ -n "$ref" && ! "$ref" =~ ^k0[1-7]$ ]] && command -v git > /dev/null; then
+    head_sha=$(git rev-parse HEAD 2> /dev/null || true)
+    ref=$(timeout 20 git ls-remote --tags origin 'k0*' 2> /dev/null \
+        | awk -v h="$head_sha" '$1 == h { t = $2; sub("refs/tags/", "", t); sub(/\^\{\}$/, "", t); print t }' \
+        | grep -E '^k0[1-7]$' | sort | tail -1 || true)
+fi
 if [[ "$ref" =~ ^k0[1-7]$ && "$day" =~ ^k0[1-7]$ && "${day#k0}" -gt "${ref#k0}" ]]; then
     echo "SKIP: $day test, aga esitatud on tag $ref"; exit 1
 fi
