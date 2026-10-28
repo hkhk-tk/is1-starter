@@ -1,6 +1,0 @@
-# Skriptid ja hostide failid alati LF-reavahetusega (ka Windowsi VS Code'is)
-*.sh text eol=lf
-hosts text eol=lf
-webhosts text eol=lf
-*.env text eol=lf
-*.example text eol=lf

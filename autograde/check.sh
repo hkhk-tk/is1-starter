@@ -108,98 +108,63 @@ tool() {
 
 case "$day/$name" in
 
-# ---------- K1 Bash ----------
-# Fragment koondamiseks: asendab check.sh-is kõik k01/* harud. Punktid kokku 100 (vt tests-k01.md).
-# Tühi glob ei lase läbi: failide loend kogutakse nullglob'iga ja tühja loendi korral FAIL.
+# ---------- K1 Ansible'i alused ----------
+# Kohustuslik 80 p: files 15, config 10, inventory 15, syntax 25, training 15. Boonus 20 p: tools 10, final 10.
 k01/files)
-    need_files k01-bash/hosts k01-bash/websetup.sh k01-bash/webdeploy.sh k01-bash/deploy-all.sh k01-bash/check.sh \
-        k01-bash/etc-hosts.sh k01-bash/services/mariadb.sh k01-bash/services/memcache.sh \
-        k01-bash/services/rabbitmq.sh k01-bash/services/tomcat.sh k01-bash/services/nginx.sh
-    if grep -q $'\r' k01-bash/hosts k01-bash/*.sh k01-bash/services/*.sh; then
-        fail "Windowsi reavahetused (CRLF): VS Code all paremal CRLF -> LF, või .gitattributes"
-    fi
-    pass "kõik failid olemas, LF-reavahetused" ;;
-k01/executable)
-    shopt -s nullglob
-    files=(k01-bash/*.sh k01-bash/services/*.sh)
-    # starteri mustandid üksi ei anna punkte: õppija enda skriptid peavad olemas olema
-    need_files k01-bash/websetup.sh k01-bash/webdeploy.sh
-    [[ ${#files[@]} -ge 3 ]] || fail "k01-bash/ all pole skripte"
-    for f in "${files[@]}"; do
-        [[ -x "$f" ]] || fail "$f pole käivitatav (chmod +x; git add --chmod=+x $f)"
-        head -1 "$f" | grep -q '^#!' || fail "$f: shebang puudub"
+    k01_files=(k01/prepare-training.sh k01/ansible.cfg k01/inventory.ini k01/training.yml k01/tools.yml)
+    need_files "${k01_files[@]}"
+    for f in "${k01_files[@]}"; do
+        if grep -q $'\r' "$f"; then fail "$f: Windowsi reavahetused (CRLF), vaja LF"; fi
     done
-    pass "${#files[@]} skripti käivitatavad" ;;
+    bash -n k01/prepare-training.sh || fail "prepare-training.sh: süntaksiviga"
+    pass "k01 failid olemas, LF, skripti süntaks korras" ;;
+k01/config)
+    need_files k01/ansible.cfg
+    grep -q '^\[defaults\]' k01/ansible.cfg || fail "ansible.cfg: [defaults] puudub"
+    grep -Eq '^inventory[[:space:]]*=[[:space:]]*(\./)?inventory\.ini[[:space:]]*$' k01/ansible.cfg \
+        || fail "ansible.cfg: rida 'inventory = inventory.ini' puudub"
+    pass "ansible.cfg viitab inventory.ini-le" ;;
+k01/inventory)
+    need_files k01/inventory.ini
+    tool ansible-playbook
+    inv=$(ansible-inventory -i k01/inventory.ini --list 2> /dev/null) || fail "inventory.ini ei ole loetav"
+    python3 - "$inv" << 'PY' || exit 1
+import json, sys
+d = json.loads(sys.argv[1])
+def hosts(g): return set(d.get(g, {}).get("hosts", []))
+def fail(m): print("FAIL: " + m); sys.exit(1)
+if not {"web01", "app01", "rmq01"} <= hosts("ubuntu"): fail("grupis ubuntu peavad olema web01, app01, rmq01")
+if not {"mc01", "db01"} <= hosts("rocky"): fail("grupis rocky peavad olema mc01, db01")
+hv = d.get("_meta", {}).get("hostvars", {})
+if any(hv.get(h, {}).get("ansible_user") != "kasutaja" for h in ["web01", "app01", "rmq01", "mc01", "db01"]):
+    fail("ansible_user=kasutaja puudub mõnel masinal")
+PY
+    pass "inventory: grupid ubuntu ja rocky, ansible_user=kasutaja" ;;
 k01/syntax)
-    shopt -s nullglob
-    files=(k01-bash/*.sh k01-bash/services/*.sh)
-    # starteri mustandid üksi ei anna punkte: õppija enda skriptid peavad olemas olema
-    need_files k01-bash/websetup.sh k01-bash/webdeploy.sh
-    [[ ${#files[@]} -ge 3 ]] || fail "k01-bash/ all pole skripte"
-    for f in "${files[@]}"; do bash -n "$f" || fail "$f: süntaksiviga"; done
-    pass "bash -n (${#files[@]} skripti)" ;;
-k01/shellcheck)
-    shopt -s nullglob
-    files=(k01-bash/*.sh k01-bash/services/*.sh)
-    # starteri mustandid üksi ei anna punkte: õppija enda skriptid peavad olemas olema
-    need_files k01-bash/websetup.sh k01-bash/webdeploy.sh
-    [[ ${#files[@]} -ge 3 ]] || fail "k01-bash/ all pole skripte"
-    tool shellcheck
-    shellcheck -S warning "${files[@]}" || fail "ShellCheck leidis vigu"
-    pass "ShellCheck puhas (${#files[@]} skripti)" ;;
-k01/strict)
-    shopt -s nullglob
-    files=(k01-bash/*.sh k01-bash/services/*.sh)
-    # starteri mustandid üksi ei anna punkte: õppija enda skriptid peavad olemas olema
-    need_files k01-bash/websetup.sh k01-bash/webdeploy.sh
-    [[ ${#files[@]} -ge 3 ]] || fail "k01-bash/ all pole skripte"
-    for f in "${files[@]}"; do
-        grep -Eq '^[[:space:]]*set -[a-z]*e' "$f" || fail "$f: 'set -e' (või set -euo pipefail) puudub"
+    need_files k01/ansible.cfg k01/inventory.ini k01/training.yml k01/tools.yml
+    tool ansible-playbook
+    cd k01 || fail "kaust k01 puudub"
+    for p in training.yml tools.yml; do
+        ANSIBLE_CONFIG=./ansible.cfg ansible-playbook --syntax-check "$p" > "$AUTOGRADE_TMP/syntax.log" 2>&1 \
+            || { tail -5 "$AUTOGRADE_TMP/syntax.log"; fail "$p: syntax-check kukkus"; }
     done
-    pass "skriptid peatuvad vea juures" ;;
-k01/parameters)
-    need_files k01-bash/websetup.sh
-    grep -Eq '\$\{?1' k01-bash/websetup.sh || fail "websetup.sh ei kasuta argumenti (\$1)"
-    grep -q 'os-release' k01-bash/websetup.sh || fail "websetup.sh ei tuvasta distrot (/etc/os-release)"
-    if ! grep -q 'apt' k01-bash/websetup.sh || ! grep -q 'dnf' k01-bash/websetup.sh; then
-        fail "websetup.sh peab toetama nii Ubuntut (apt) kui Rockyt (dnf)"
-    fi
-    grep -Eq '^[[:space:]]*(function[[:space:]]+)?[a-z_]+[[:space:]]*\(\)' k01-bash/websetup.sh \
-        || fail "websetup.sh: vähemalt üks funktsioon puudub"
-    pass "websetup.sh: argument, distro, funktsioon" ;;
-k01/loop)
-    need_files k01-bash/webdeploy.sh
-    grep -Eq '(^|[[:space:]])(for|while)[[:space:]]' k01-bash/webdeploy.sh || fail "webdeploy.sh: tsükkel puudub"
-    grep -q 'hosts' k01-bash/webdeploy.sh || fail "webdeploy.sh ei loe hostide faili"
-    grep -q 'ssh' k01-bash/webdeploy.sh || fail "webdeploy.sh ei kasuta ssh-d"
-    if grep -Eq 'while[[:space:]]+(IFS=[^ ]*[[:space:]]+)?read' k01-bash/webdeploy.sh \
-        && ! grep -Eq 'ssh[^|]*[[:space:]]-n([[:space:]]|$)|< */dev/null|mapfile|readarray' k01-bash/webdeploy.sh; then
-        fail "webdeploy.sh: while read + ssh neelab stdin-i (ssh -n, for-tsükkel või mapfile)"
-    fi
-    pass "webdeploy.sh käib hostid läbi" ;;
-k01/secrets)
-    need_files .gitignore k01-bash/websetup.sh k01-bash/webdeploy.sh k01-bash/hosts
-    if git ls-files --error-unmatch k01-bash/secrets.env > /dev/null 2>&1; then
-        fail "k01-bash/secrets.env on Gitis (git rm --cached k01-bash/secrets.env)"
-    fi
-    grep -Eq '(^|/)secrets\.env$' .gitignore || fail ".gitignore ei sisalda secrets.env"
-    git ls-files k01-bash | xargs -r grep -lE '^(DB_PASSWORD|RABBITMQ_PASSWORD|TEACHER_TOKEN)=[^$]' 2> /dev/null \
-        | grep -v 'example$' | grep -q . && fail "paroolid on Gitis olevas failis (ainult secrets.env.example tohib)"
-    pass "saladused pole Gitis" ;;
-k01/fixed)
-    need_files k01-bash/services/mariadb.sh k01-bash/services/memcache.sh k01-bash/services/tomcat.sh
-    grep -q "'labseis'@'%'" k01-bash/services/mariadb.sh \
-        || fail "mariadb.sh: kasutaja peab tohtima tulla app01-st, mitte ainult db01-st endast"
-    grep -q "'labseis'@'localhost'" k01-bash/services/mariadb.sh && fail "mariadb.sh: alles on 'labseis'@'localhost'"
-    grep -q '0\.0\.0\.0' k01-bash/services/memcache.sh || fail "memcache.sh: memcached kuulab ainult 127.0.0.1"
-    grep -Eq 'chown -R tomcat' k01-bash/services/tomcat.sh || fail "tomcat.sh: Tomcati kaust ei kuulu kasutajale tomcat"
-    pass "starteri kolm viga parandatud" ;;
-k01/report)
-    need_files k01-bash/check.sh
-    grep -Eq 'labseis-report|/api/results' k01-bash/check.sh || fail "check.sh ei saada tulemust Labori seisu"
-    grep -v '^[[:space:]]*#' k01-bash/check.sh | grep -Eq 'curl.*/health' \
-        || fail "check.sh ei kontrolli rakendust (curl .../health)"
-    pass "check.sh kontrollib /health ja saadab tulemused" ;;
+    pass "training.yml ja tools.yml syntax-check" ;;
+k01/training)
+    need_files k01/training.yml
+    grep -q 'ansible.builtin.file' k01/training.yml || fail "training.yml: ansible.builtin.file puudub"
+    grep -q 'ansible.builtin.copy' k01/training.yml || fail "training.yml: ansible.builtin.copy puudub"
+    grep -Eq "mode:[[:space:]]*[\"']0750[\"']" k01/training.yml || fail 'training.yml: mode: "0750" puudub'
+    grep -Eq "mode:[[:space:]]*[\"']0640[\"']" k01/training.yml || fail 'training.yml: mode: "0640" puudub'
+    pass "training.yml: file, copy, mode jutumärkides" ;;
+k01/tools)
+    need_files k01/tools.yml
+    grep -q 'when:' k01/tools.yml || fail "tools.yml: when puudub"
+    grep -q 'tags:' k01/tools.yml || fail "tools.yml: tags puudub"
+    pass "tools.yml: when ja tags" ;;
+k01/final)
+    need_files k01/training.yml
+    grep -q 'README.txt' k01/training.yml || fail "training.yml: lõpuülesanne (README.txt) puudub"
+    pass "lõpuülesanne: README.txt playbook'is" ;;
 
 # ---------- K2 Ansible ----------
 # Fragment check.sh case-plokki (K2). Kokku 100 p: files 10, inventory 10, structure 10, vault 10,

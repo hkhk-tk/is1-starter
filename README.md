@@ -5,9 +5,9 @@ Ansible'iga, konteinerites, OpenTofuga, pipeline'iga ja Kubernetesis.
 
 ## Kuidas siin töötada
 
-1. Iga päev alusta uuel harul: `git switch -c k01-bash` (K2: `k02-ansible` jne).
-2. Tee päeva issue'd läbi (GitHub → Issues, milestone `K1` … `K7`). Sulge issue commit'iga: `git commit -m "websetup.sh argumendiga (closes #3)"`.
-3. Päeva lõpus: PR `main`-i, merge, siis tag ja push:
+1. 1. kohtumisel töötad kaustas `k01/` otse `main`-il. Alates 2. kohtumisest alusta uuel harul (`git switch -c k02-ansible` jne).
+2. Tee päeva issue'd läbi (GitHub → Issues, milestone `K1` … `K7`). Sulge issue commit'iga: `git commit -m "k01: training.yml (closes #3)"`.
+3. Päeva lõpus tag ja push (alates 2. kohtumisest enne PR `main`-i ja merge):
 
    ```bash
    git switch main && git pull
@@ -33,7 +33,7 @@ git merge kursus/lahendus/k01 --allow-unrelated-histories
 |---|---|---|
 | `src/`, `pom.xml`, `db/` | — | rakenduse kood (ei muuda) |
 | `scripts/labseis-report.sh` | K1 → | tulemuse saatmine Labori seisu |
-| `k01-bash/` | K1 | starteris: `etc-hosts.sh`, `deploy-all.sh`, `check.sh` (mustand), `services/*.sh` (mustandid, 3 viga), `*.example`. Sina: `websetup.sh`, `webdeploy.sh`, `hosts`, parandatud `services/` |
+| `k01/` | K1 | `prepare-training.sh`, `ansible.cfg`, `inventory.ini`, `training.yml`, `tools.yml` |
 | `k02-ansible/` | K2 | `ansible.cfg`, `inventory.ini`, `site.yml`, `deploy.yml`, `requirements.yml`, `roles/`, `group_vars/`, `host_vars/`, `group_vars/all/vault.yml` (krüpteeritud), `run2.txt` |
 | `k03-docker/`, `.dockerignore` | K3 | `app/`, `db/`, `web/` Dockerfile'id, `web/nginx.conf`, `compose.yaml`, `.env.example` |
 | `k04-tofu/` | K4 | `versions.tf`, `variables.tf`, `locals.tf`, `data.tf`, `main.tf`, `outputs.tf`, `inventory.tf` + `inventory.tftpl`, `modules/vm/`, `terraform.tfvars.example`, `.terraform.lock.hcl` |
@@ -46,8 +46,8 @@ git merge kursus/lahendus/k01 --allow-unrelated-histories
 ## Kontrolli enne tagi ise
 
 ```bash
-bash autograde/check.sh k01 shellcheck
-bash autograde/check.sh k01 loop
+bash autograde/check.sh k01 files
+bash autograde/check.sh k01 training
 # kõik päeva testid korraga
 grep -oE 'check\.sh k01 [a-z]+' autograde/TESTS.md | while read -r _ d t; do bash autograde/check.sh "$d" "$t"; done
 ```

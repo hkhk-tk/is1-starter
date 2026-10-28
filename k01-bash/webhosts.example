@@ -1,3 +1,0 @@
-# Veebilehe harjutus (K1.4): üks Ubuntu ja üks Rocky host. Kopeeri failiks "webhosts".
-web01  10.10.1.11
-db01   10.10.1.15

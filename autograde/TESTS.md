@@ -9,16 +9,13 @@ read lõpetavad kohe `SKIP` teatega (0 p, tööriistu ei laadita). K1–K3 jooks
 
 | Päev | Test | Käsk | Punktid |
 |---|---|---|---|
-| K1 | failid + LF | `bash autograde/check.sh k01 files` | 10 |
-| K1 | käivitatavad | `bash autograde/check.sh k01 executable` | 10 |
-| K1 | süntaks | `bash autograde/check.sh k01 syntax` | 5 |
-| K1 | ShellCheck | `bash autograde/check.sh k01 shellcheck` | 20 |
-| K1 | set -e | `bash autograde/check.sh k01 strict` | 10 |
-| K1 | argument + distro + funktsioon | `bash autograde/check.sh k01 parameters` | 10 |
-| K1 | hostide tsükkel | `bash autograde/check.sh k01 loop` | 10 |
-| K1 | saladused pole Gitis | `bash autograde/check.sh k01 secrets` | 10 |
-| K1 | starteri vead parandatud | `bash autograde/check.sh k01 fixed` | 10 |
-| K1 | check.sh: /health + Labori seis | `bash autograde/check.sh k01 report` | 5 |
+| K1 | kohustuslik: failid, LF, skripti süntaks | `bash autograde/check.sh k01 files` | 15 |
+| K1 | kohustuslik: ansible.cfg → inventory.ini | `bash autograde/check.sh k01 config` | 10 |
+| K1 | kohustuslik: inventory grupid ubuntu, rocky, ansible_user | `bash autograde/check.sh k01 inventory` | 15 |
+| K1 | kohustuslik: syntax-check training.yml, tools.yml | `bash autograde/check.sh k01 syntax` | 25 |
+| K1 | kohustuslik: training.yml file, copy, mode | `bash autograde/check.sh k01 training` | 15 |
+| K1 | boonus: tools.yml when ja tags | `bash autograde/check.sh k01 tools` | 10 |
+| K1 | boonus: lõpuülesanne README.txt | `bash autograde/check.sh k01 final` | 10 |
 | K2 | failid ja rollid | `bash autograde/check.sh k02 files` | 10 |
 | K2 | inventory: grupid, OS-grupid (ubuntu, rocky), host/group vars | `bash autograde/check.sh k02 inventory` | 10 |
 | K2 | mallid, handlerid, defaults, OS-tingimus | `bash autograde/check.sh k02 structure` | 10 |
