@@ -134,12 +134,12 @@ d = json.loads(sys.argv[1])
 def hosts(g): return set(d.get(g, {}).get("hosts", []))
 def fail(m): print("FAIL: " + m); sys.exit(1)
 if not {"web01", "app01", "rmq01"} <= hosts("ubuntu"): fail("grupis ubuntu peavad olema web01, app01, rmq01")
-if not {"mc01", "db01"} <= hosts("rocky"): fail("grupis rocky peavad olema mc01, db01")
+if not {"mc01", "db01"} <= hosts("alma"): fail("grupis alma peavad olema mc01, db01")
 hv = d.get("_meta", {}).get("hostvars", {})
 if any(hv.get(h, {}).get("ansible_user") != "kasutaja" for h in ["web01", "app01", "rmq01", "mc01", "db01"]):
     fail("ansible_user=kasutaja puudub mõnel masinal")
 PY
-    pass "inventory: grupid ubuntu ja rocky, ansible_user=kasutaja" ;;
+    pass "inventory: grupid ubuntu ja alma, ansible_user=kasutaja" ;;
 k01/syntax)
     need_files k01/ansible.cfg k01/inventory.ini k01/training.yml k01/tools.yml
     tool ansible-playbook
@@ -180,8 +180,8 @@ k02/inventory)
     for g in db cache queue app web; do
         grep -Eq "^\[$g\]" "$inv" || fail "$inv: grupp [$g] puudub"
     done
-    # OS-grupid: K2 käsitsi [ubuntu:children]/[rocky:children], K4 OpenTofu genereerib [ubuntu]/[rocky] hostidega
-    for g in ubuntu rocky; do
+    # OS-grupid: K2 käsitsi [ubuntu:children]/[alma:children], K4 OpenTofu genereerib [ubuntu]/[alma] hostidega
+    for g in ubuntu alma; do
         grep -Eq "^\[$g(:children)?\]" "$inv" || fail "$inv: OS-grupp [$g] või [$g:children] puudub (group_vars/$g.yml)"
     done
     grep -Eq 'ansible_host=' "$inv" || fail "$inv: ansible_host puudub"
@@ -195,7 +195,7 @@ k02/structure)
     compgen -G 'k02-ansible/roles/*/handlers/main.yml' > /dev/null || fail "handlerid (roles/*/handlers/main.yml) puuduvad"
     grep -rqs --include='*.yml' 'notify:' k02-ansible/roles || fail "ükski ülesanne ei teavita handlerit (notify:)"
     compgen -G 'k02-ansible/roles/*/defaults/main.yml' > /dev/null || fail "rollidel pole vaikeväärtusi (defaults/main.yml)"
-    grep -rqs --include='*.yml' -E 'os_family' k02-ansible/roles || fail "Ubuntu/Rocky erinevus puudub (ansible_facts['os_family'])"
+    grep -rqs --include='*.yml' -E 'os_family' k02-ansible/roles || fail "Ubuntu/AlmaLinuxi erinevus puudub (ansible_facts['os_family'])"
     grep -Eq '^collections:' k02-ansible/requirements.yml || fail "requirements.yml: collections: puudub"
     grep -Eq 'version:' k02-ansible/requirements.yml || fail "requirements.yml: collectionitel pole versioone"
     pass "mallid, handlerid, defaults, OS-tingimus, requirements" ;;
@@ -230,7 +230,7 @@ k02/syntax)
     grep -rlZ --include='*.yml' --include='*.yaml' '^\$ANSIBLE_VAULT' . | xargs -0 -r rm -f
     printf 'autograde\n' > .autograde_vault_pass
     export ANSIBLE_VAULT_PASSWORD_FILE="$work/.autograde_vault_pass"
-    printf '[db]\ndb01\n[cache]\nmc01\n[queue]\nrmq01\n[app]\napp01\n[web]\nweb01\n[ubuntu:children]\nqueue\napp\nweb\n[rocky:children]\ndb\ncache\n' > inv.ini
+    printf '[db]\ndb01\n[cache]\nmc01\n[queue]\nrmq01\n[app]\napp01\n[web]\nweb01\n[ubuntu:children]\nqueue\napp\nweb\n[alma:children]\ndb\ncache\n' > inv.ini
     ansible-playbook -i inv.ini --syntax-check site.yml || fail "syntax-check kukkus (site.yml)"
     if [[ -f deploy.yml ]]; then ansible-playbook -i inv.ini --syntax-check deploy.yml || fail "syntax-check kukkus (deploy.yml)"; fi
     pass "syntax-check" ;;
@@ -375,7 +375,7 @@ k04/resources)
     grep -q 'resource "proxmox_virtual_environment_vm"' <<< "$code" || fail "VM-i ressurss puudub"
     grep -q 'data "proxmox_virtual_environment_vms"' <<< "$code" || fail "mall ei tule andmeallikast (data proxmox_virtual_environment_vms)"
     grep -q 'for_each' <<< "$code" || fail "VM-id ei tule for_each abil"
-    grep -Eq 'type *= *"(x86-64-v[234](-AES)?|host)"' <<< "$code" || fail "CPU tüüp puudub (Rocky 9 vajab x86-64-v2-AES)"
+    grep -Eq 'type *= *"(x86-64-v[234](-AES)?|host)"' <<< "$code" || fail "CPU tüüp puudub (AlmaLinux 9 vajab x86-64-v2-AES)"
     grep -Eq 'tags *= *sort\(' <<< "$code" || fail "tagid ei ole sorteeritud (sort(...)): plan ei jää puhtaks"
     grep -q 'resource "local_file"' <<< "$code" || fail "inventory't ei genereerita (local_file)"
     grep -q 'templatefile(' <<< "$code" || fail "templatefile() puudub"

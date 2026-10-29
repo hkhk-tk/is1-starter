@@ -1,4 +1,4 @@
--- Labori seis: andmebaasi skeem (MariaDB 10.5+: Rocky 9 AppStream; Ubuntu 24.04 10.11; konteiner 11.4)
+-- Labori seis: andmebaasi skeem (MariaDB 10.5+: AlmaLinux 9 AppStream; Ubuntu 24.04 10.11; konteiner 11.4)
 CREATE TABLE IF NOT EXISTS course (
     id    INT AUTO_INCREMENT PRIMARY KEY,
     code  VARCHAR(32)  NOT NULL UNIQUE,
