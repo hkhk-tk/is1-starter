@@ -26,8 +26,8 @@ Küsimused: <https://github.com/hkhk-tk/is126-arutelu/discussions>.
 |---|---|---|
 | `src/`, `pom.xml`, `db/` | — | rakenduse kood (ei muuda) |
 | `scripts/labseis-report.sh` | K1 → | tulemuse saatmine Labori seisu |
-| `k01/` | K1 | `prepare-training.sh`, `ansible.cfg`, `inventory.ini`, `training.yml`, `tools.yml` |
-| `k02-ansible/` | K2 | `ansible.cfg`, `inventory.ini`, `site.yml`, `deploy.yml`, `requirements.yml`, `roles/`, `group_vars/`, `host_vars/`, `group_vars/all/vault.yml` (krüpteeritud), `run2.txt` |
+| `k01/` | K1 | `prepare-training.sh`, `ansible.cfg`, `inventory.ini`, `training.yml`, `tools.yml`, `haldus.yml`, `group_vars/`, `ajasunk.yml` |
+| `k02-ansible/` | K2 | `ansible.cfg`, `inventory.ini`, `site.yml`, `requirements.yml`, `roles/{common,mariadb,memcached,rabbitmq,tomcat,nginx}`, `group_vars/all/main.yml`, `group_vars/all/vault.yml` (krüpteeritud), `group_vars/app.yml`, `host_vars/web01.yml`, `run2.txt` |
 | `k03-docker/`, `.dockerignore` | K3 | `app/`, `db/`, `web/` Dockerfile'id, `web/nginx.conf`, `compose.yaml`, `.env.example` |
 | `k04-tofu/` | K4 | `versions.tf`, `variables.tf`, `locals.tf`, `data.tf`, `main.tf`, `outputs.tf`, `inventory.tf` + `inventory.tftpl`, `modules/vm/`, `terraform.tfvars.example`, `.terraform.lock.hcl` |
 | `.github/workflows/`, `.github/actionlint.yaml` | K5, K7 | `ci.yml` (K5), valikuline `smoke.yml`, `gitops.yml` (K7) |
