@@ -1,0 +1,66 @@
+{
+ "juhendaja": "mariahkhk",
+ "pealkiri": "K1 · Linuxi haldusest automatiseerimiseni",
+ "tahtaeg": "enne 2. kohtumist (07.11)",
+ "sildid": [
+  "K1",
+  "bash",
+  "ansible"
+ ],
+ "ulesanded": [
+  {
+   "pealkiri": "1 · Keskkond: SSH-võti ja ühendus masinatega",
+   "silt": "klassitöö",
+   "nadal": 1,
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k01/lab-1-keskkond/\n\n`ssh web01 hostname` (ja teised masinad) vastab ilma paroolita, repositoorium on kloonitud kausta `~/kursus`."
+  },
+  {
+   "pealkiri": "2 · Käsitsi ja skriptiga",
+   "silt": "klassitöö",
+   "nadal": 1,
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k01/lab-2-kasitsi/\n\nÜlesanne web01-s käsitsi ja skriptiga, teise käivituse mõju nähtud.\n\n→ `k01/prepare-training.sh`"
+  },
+  {
+   "pealkiri": "3 · Ansible'i alused",
+   "silt": "klassitöö",
+   "nadal": 1,
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k01/lab-3-ansible-alused/\n\nKõik viis masinat vastavad `pong`, `tree` teine paigaldus `changed: false`.\n\n→ `k01/ansible.cfg`, `k01/inventory.ini`"
+  },
+  {
+   "pealkiri": "4 · Esimene playbook",
+   "silt": "klassitöö",
+   "nadal": 1,
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k01/lab-4-playbook/\n\nKorduv käivitus `changed=0`, käsitsi muudatus taastatud.\n\n→ `k01/training.yml`"
+  },
+  {
+   "pealkiri": "5 · Playbook viiele masinale",
+   "silt": "klassitöö",
+   "nadal": 1,
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k01/lab-5-parem-playbook/\n\n`when`, `--limit` ja `tags` proovitud, korduv käivitus `changed=0`.\n\n→ `k01/tools.yml`"
+  },
+  {
+   "pealkiri": "6 · Iseseisev ülesanne ja töö esitamine",
+   "silt": "klassitöö",
+   "nadal": 1,
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k01/lab-6-esitamine/\n\n`README.txt` playbook'iga, tag `k01` GitHubis."
+  },
+  {
+   "pealkiri": "H1 · Muuda üht väärtust",
+   "silt": "kodutöö",
+   "nadal": 1,
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k01/kodutoo/\n\nPlaybook'is `enabled=false`, teine käivitus `changed=0`."
+  },
+  {
+   "pealkiri": "H2 · Sama seadistus kõigile Ubuntu masinatele",
+   "silt": "kodutöö",
+   "nadal": 1,
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k01/kodutoo/\n\n`hosts: ubuntu`, `--check --diff --limit app01` enne."
+  },
+  {
+   "pealkiri": "H3 · Boonus: sama programm, erinev paketinimi",
+   "silt": "kodutöö",
+   "nadal": 1,
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k01/kodutoo/\n\n`dig` kõigis masinates (`dnsutils` / `bind-utils`)."
+  }
+ ]
+}

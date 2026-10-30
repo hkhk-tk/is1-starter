@@ -7,6 +7,8 @@ Ansible'iga, konteinerites, OpenTofuga, pipeline'iga ja Kubernetesis.
 
 Iga kohtumise failid lähevad oma kausta, 1. kohtumisel kausta `k01/`. Juhendid on kursuse saidil: <https://hkhk-tk.github.io/is1-automatiseerimine/>.
 
+Iga kohtumise ülesanded on selle repositooriumi issue'des (vahekaart **Issues**): üks issue kohtumise kohta ja selles märkeruut iga praktikumi osa ja kodutöö kohta. Märgi osa tehtuks, kui oled selle lõpetanud.
+
 Töö esitatakse tag'iga. Päeva lõpus tee commit, saada see GitHubi ja lisa tag:
 
 ```bash
