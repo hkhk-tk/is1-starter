@@ -1,31 +1,22 @@
 # IS1-26 · Labori seis
 
-Sinu kursuse repo. Siin ehitad seitsme laupäeva jooksul sama rakenduse (Labori seis) üles seitse korda: skriptidega,
+Kursuse repositoorium. Siin ehitad seitsme laupäeva jooksul sama rakenduse (Labori seis) üles seitse korda: skriptidega,
 Ansible'iga, konteinerites, OpenTofuga, pipeline'iga ja Kubernetesis.
 
 ## Kuidas siin töötada
 
-1. 1. kohtumisel töötad kaustas `k01/` otse `main`-il. Alates 2. kohtumisest alusta uuel harul (`git switch -c k02-ansible` jne).
-2. Tee päeva issue'd läbi (GitHub → Issues, milestone `K1` … `K7`). Sulge issue commit'iga: `git commit -m "k01: training.yml (closes #3)"`.
-3. Päeva lõpus tag ja push (alates 2. kohtumisest enne PR `main`-i ja merge):
+Iga kohtumise failid lähevad oma kausta, 1. kohtumisel kausta `k01/`. Juhendid on kursuse saidil: <https://hkhk-tk.github.io/is1-automatiseerimine/>.
 
-   ```bash
-   git switch main && git pull
-   git tag k01 && git push origin k01
-   ```
-
-   Tag `k01` on esitamine. Autograder jookseb tagi peal, tulemus on Classroom 50-s.
-4. Parandus pärast esitamist: uus commit, siis tag uuesti (`git tag -f k01 && git push -f origin k01`). Lubatud üks hilinenud kord.
-
-## Kui jäid maha
-
-Koolitaja lahendused on harudel `lahendus/k01` … `lahendus/k07`. Võta eelmise päeva lahendus ja jätka sealt:
+Töö esitatakse tag'iga. Päeva lõpus tee commit, saada see GitHubi ja lisa tag:
 
 ```bash
-git remote add kursus https://github.com/hkhk-tk/lahendused.git   # üks kord
-git fetch kursus
-git merge kursus/lahendus/k01 --allow-unrelated-histories
+git push
+git tag k01 && git push origin k01
 ```
+
+Automaatne hindaja kontrollib tag'iga märgitud versiooni ja tulemus ilmub Classroom 50-s. Kui pead pärast esitamist midagi parandama, tee uus commit ja saada tag uuesti: `git tag -f k01 && git push -f origin k01`.
+
+Küsimused: <https://github.com/hkhk-tk/is126-arutelu/discussions>.
 
 ## Kaustad
 
