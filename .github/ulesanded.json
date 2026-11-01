@@ -102,7 +102,7 @@
    "pealkiri": "6 · Korduv käivitus ja esitamine",
    "silt": "klassitöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab-6-esitamine/\n\nTeine käivitus `changed=0` (`run2.txt`), PR ühendatud, tag `k02` GitHubis."
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab-6-esitamine/\n\n`ansible-lint` puhas, teine käivitus `changed=0` (`run2.txt`), PR ühendatud, tag `k02` GitHubis."
   },
   {
    "pealkiri": "H1 · Suurem vahemälu",

@@ -1,7 +1,9 @@
 # Autograderi testid (Classroom 50)
 
 Üks Classroom 50 ülesanne, esitamine **tagged commit** (tagid `k01` … `k07`). Iga päeva testid kokku **100 punkti**.
-Classroom 50-s: ülesanne → Tests → lisa iga rida eraldi testina (Command = veerg "Käsk", Points = veerg "Punktid").
+Testid on kursuse repositooriumis `hkhk-tk/classroom50` failides `is126-automatiseerimine/kNN-tests.json`; `assignments.json`-i
+uuendab skript `uuenda-assignments.sh`. Alates K2-st laeb iga testi `setup` enne käivitamist selle faili uusima versiooni
+starteri harust `main`, nii et parandused jõuavad ka juba loodud repositooriumitesse ja õppija muudetud koopia ei loe.
 
 Autograder jooksutab iga tagi peal kõik read. `check.sh` vaatab `GITHUB_REF_NAME`-i: kui tag on `k03`, siis K4–K7
 read lõpetavad kohe `SKIP` teatega (0 p, tööriistu ei laadita). K1–K3 jooksevad uuesti (regressioon).
@@ -16,13 +18,16 @@ read lõpetavad kohe `SKIP` teatega (0 p, tööriistu ei laadita). K1–K3 jooks
 | K1 | kohustuslik: training.yml file, copy, mode | `bash autograde/check.sh k01 training` | 15 |
 | K1 | boonus: tools.yml when ja tags | `bash autograde/check.sh k01 tools` | 10 |
 | K1 | boonus: lõpuülesanne README.txt | `bash autograde/check.sh k01 final` | 10 |
-| K2 | failid ja rollid | `bash autograde/check.sh k02 files` | 10 |
-| K2 | inventory: grupid, OS-grupid (ubuntu, alma), host/group vars | `bash autograde/check.sh k02 inventory` | 10 |
-| K2 | mallid, handlerid, defaults, OS-tingimus | `bash autograde/check.sh k02 structure` | 10 |
-| K2 | Vault, avatekstis paroole pole | `bash autograde/check.sh k02 vault` | 10 |
+| K2 | failid ja kuus rolli (common, mariadb, memcached, rabbitmq, tomcat, nginx), LF | `bash autograde/check.sh k02 files` | 10 |
+| K2 | teenuse- ja distributsioonigrupid, group_vars ja host_vars | `bash autograde/check.sh k02 inventory` | 10 |
+| K2 | mallid, handler'id, vaikeväärtused, tulemüüri tingimus, kogud | `bash autograde/check.sh k02 structure` | 10 |
+| K2 | vault.yml krüpteeritud, avatekstis paroole pole | `bash autograde/check.sh k02 vault` | 10 |
 | K2 | teine käivitus changed=0 (`run2.txt`) | `bash autograde/check.sh k02 idempotent` | 10 |
-| K2 | syntax-check | `bash autograde/check.sh k02 syntax` | 20 |
-| K2 | ansible-lint | `bash autograde/check.sh k02 lint` | 30 |
+| K2 | site.yml syntax-check | `bash autograde/check.sh k02 syntax` | 20 |
+| K2 | ansible-lint puhas (site.yml ja rollid peavad olemas olema) | `bash autograde/check.sh k02 lint` | 30 |
+| K2 | boonus: kodutöö H1, `host_vars/mc01.yml` 128 MB | `bash autograde/check.sh k02 h1` | 0 |
+| K2 | boonus: kodutöö H2, `tomcat_heap: 384m` | `bash autograde/check.sh k02 h2` | 0 |
+| K2 | boonus: kodutöö H4, `community.general` ja ajavöönd | `bash autograde/check.sh k02 h4` | 0 |
 | K3 | failid + saladused väljas | `bash autograde/check.sh k03 files` | 10 |
 | K3 | compose valideerub | `bash autograde/check.sh k03 compose` | 15 |
 | K3 | sõltuvused, volume, restart | `bash autograde/check.sh k03 deps` | 15 |
