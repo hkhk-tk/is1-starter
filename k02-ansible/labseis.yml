@@ -1,0 +1,312 @@
+# Labori seis viies masinas, kõik ühes failis.
+# Käivitus: ansible-playbook labseis.yml
+- name: Kõik masinad
+  hosts: all
+  become: true
+  tasks:
+    - name: Masinad tunnevad üksteist nime järgi
+      ansible.builtin.shell: echo "{{ hostvars[item].ansible_default_ipv4.address }} {{ item }}" >> /etc/hosts
+      loop: "{{ groups['all'] }}"
+
+- name: Andmebaas
+  hosts: db01
+  become: true
+  vars:
+    db_password: Labseis2026
+  tasks:
+    - name: MariaDB on paigaldatud (AlmaLinux)
+      ansible.builtin.dnf:
+        name: [mariadb-server, python3-PyMySQL]
+        state: present
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: MariaDB on paigaldatud (Ubuntu)
+      ansible.builtin.apt:
+        name: [mariadb-server, python3-pymysql]
+        state: present
+        update_cache: true
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: MariaDB kuulab kõigil liidestel (AlmaLinux)
+      ansible.builtin.copy:
+        dest: /etc/my.cnf.d/60-labseis.cnf
+        content: |
+          [mysqld]
+          bind-address = 0.0.0.0
+          port = 3306
+        mode: "0644"
+      when: ansible_facts['os_family'] == "RedHat"
+      notify: Restart mariadb
+
+    - name: MariaDB kuulab kõigil liidestel (Ubuntu)
+      ansible.builtin.copy:
+        dest: /etc/mysql/mariadb.conf.d/60-labseis.cnf
+        content: |
+          [mysqld]
+          bind-address = 0.0.0.0
+          port = 3306
+        mode: "0644"
+      when: ansible_facts['os_family'] == "Debian"
+      notify: Restart mariadb
+
+    - name: MariaDB töötab
+      ansible.builtin.service:
+        name: mariadb
+        state: started
+        enabled: true
+
+    - name: Tulemüür lubab andmebaasi pordi
+      ansible.posix.firewalld:
+        port: 3306/tcp
+        permanent: true
+        immediate: true
+        state: enabled
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Muudatused rakenduvad
+      ansible.builtin.meta: flush_handlers
+
+    - name: Andmebaas labseis on olemas
+      community.mysql.mysql_db:
+        name: labseis
+        encoding: utf8mb4
+        state: present
+        login_unix_socket: /var/lib/mysql/mysql.sock
+      register: uus_andmebaas
+
+    - name: Rakenduse kasutaja on olemas
+      community.mysql.mysql_user:
+        name: labseis
+        host: "%"
+        password: "{{ db_password }}"
+        priv: "labseis.*:ALL"
+        state: present
+        login_unix_socket: /var/lib/mysql/mysql.sock
+
+    - name: Skeem ja algandmed on kopeeritud
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../db/{{ item }}"
+        dest: "/root/{{ item }}"
+        mode: "0600"
+      loop: [schema.sql, seed.sql]
+
+    - name: Skeem ja algandmed on laaditud (ainult uude andmebaasi)
+      community.mysql.mysql_db:
+        name: labseis
+        state: import
+        target: "/root/{{ item }}"
+        login_unix_socket: /var/lib/mysql/mysql.sock
+      loop: [schema.sql, seed.sql]
+      when: uus_andmebaas.changed
+
+  handlers:
+    - name: Restart mariadb
+      ansible.builtin.service:
+        name: mariadb
+        state: restarted
+
+- name: Vahemälu
+  hosts: mc01
+  become: true
+  tasks:
+    - name: Memcached on paigaldatud
+      ansible.builtin.dnf:
+        name: memcached
+        state: present
+
+    - name: Memcached kuulab kõigil liidestel
+      ansible.builtin.copy:
+        dest: /etc/sysconfig/memcached
+        content: |
+          PORT="11211"
+          USER="memcached"
+          MAXCONN="1024"
+          CACHESIZE="64"
+          OPTIONS="-l 0.0.0.0"
+        mode: "0644"
+      notify: Restart memcached
+
+    - name: Memcached töötab
+      ansible.builtin.service:
+        name: memcached
+        state: started
+        enabled: true
+
+    - name: Tulemüür lubab vahemälu pordi
+      ansible.posix.firewalld:
+        port: 11221/tcp
+        permanent: true
+        immediate: true
+        state: enabled
+
+  handlers:
+    - name: Restart memcached
+      ansible.builtin.service:
+        name: memcached
+        state: restarted
+
+- name: Sõnumijärjekord
+  hosts: rmq01
+  become: true
+  tasks:
+    - name: RabbitMQ on paigaldatud
+      ansible.builtin.apt:
+        name: rabbitmq-server
+        state: present
+        update_cache: true
+
+    - name: RabbitMQ töötab
+      ansible.builtin.service:
+        name: rabbitmq-server
+        state: started
+        enabled: true
+
+    - name: Rakenduse kasutaja on olemas
+      community.rabbitmq.rabbitmq_user:
+        user: labseis
+        password: Jarjekord2026
+        update_password: on_create
+        vhost: /
+        configure_priv: ".*"
+        read_priv: ".*"
+        write_priv: ".*"
+        state: present
+
+    - name: Vaikekasutajat guest ei ole
+      community.rabbitmq.rabbitmq_user:
+        user: guest
+        state: absent
+
+- name: Rakendusserver
+  hosts: app01
+  become: true
+  tasks:
+    - name: Java 21 ja Tomcat 10 on paigaldatud
+      ansible.builtin.apt:
+        name: [openjdk-21-jre-headless, tomcat10]
+        state: present
+        update_cache: true
+
+    - name: Rakenduse seadete kaust on olemas
+      ansible.builtin.file:
+        path: /etc/labori-seis
+        state: directory
+        owner: root
+        group: tomcat
+        mode: "0750"
+
+    - name: Rakenduse seaded on failis
+      ansible.builtin.copy:
+        dest: /etc/labori-seis/env
+        content: |
+          DB_HOST=db01
+          DB_NAME=labseis
+          DB_USER=labseis
+          DB_PASSWORD=Labseis2026
+          MEMCACHED_HOST=mc01
+          RABBITMQ_HOST=rmq01
+          RABBITMQ_USER=labseis
+          RABBITMQ_PASSWORD=Jarjekord2026
+          TEACHER_TOKEN=opetaja-token-2026
+        owner: root
+        group: tomcat
+        mode: "0640"
+
+    - name: Tomcati teenuse lisaseadete kaust on olemas
+      ansible.builtin.file:
+        path: /etc/systemd/system/tomcat10.service.d
+        state: directory
+        mode: "0755"
+
+    - name: Tomcat loeb rakenduse seaded ja kasutab Java 21
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/tomcat10.service.d/labori-seis.conf
+        content: |
+          [Service]
+          EnvironmentFile=/etc/labori-seis/env
+          Environment=JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+          Environment=CATALINA_OPTS=-Xmx512m
+        mode: "0644"
+
+    - name: Kas juurkontekstis on Tomcati näidisleht?
+      ansible.builtin.stat:
+        path: /var/lib/tomcat10/webapps/ROOT/index.html
+      register: naidis
+
+    - name: Näidislehe kaust on eemaldatud
+      ansible.builtin.file:
+        path: /var/lib/tomcat10/webapps/ROOT
+        state: absent
+      when: naidis.stat.exists
+
+    - name: Rakendus (WAR) on alla laaditud
+      ansible.builtin.get_url:
+        url: https://github.com/hkhk-tk/is1-starter/releases/download/v1.1.0/labori-seis.war
+        dest: /var/lib/tomcat10/webapps/ROOT.war
+        owner: tomcat
+        group: tomcat
+        mode: "0644"
+
+    - name: Tomcat taaskäivitatakse, et seaded rakenduksid
+      ansible.builtin.command: systemctl restart tomcat10
+
+    - name: Rakendus vastab
+      ansible.builtin.uri:
+        url: http://localhost:8080/health/live
+      register: live
+      until: live.status == 200
+      retries: 40
+      delay: 5
+
+- name: Veebiserver
+  hosts: web01
+  become: true
+  tasks:
+    - name: Nginx on paigaldatud
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+        update_cache: true
+
+    - name: Labori seisu sait on seadistatud
+      ansible.builtin.copy:
+        dest: /etc/nginx/sites-available/labori-seis
+        content: |
+          upstream labori_seis {
+              server app01:8080;
+          }
+          server {
+              listen 80 default_server;
+              server_name _;
+              location / {
+                  proxy_pass http://labori_seis;
+                  proxy_set_header Host $host;
+              }
+          }
+        mode: "0644"
+      notify: Reload nginx
+
+    - name: Labori seisu sait on sisse lülitatud
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/labori-seis
+        dest: /etc/nginx/sites-enabled/labori-seis
+        state: link
+      notify: Reload nginx
+
+    - name: Vaikesait on välja lülitatud
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Reload nginx
+
+    - name: Nginx töötab
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded

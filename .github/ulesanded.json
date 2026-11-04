@@ -69,69 +69,81 @@
    "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k01/kodutoo/\n\n`dig` kõigis masinates (`dnsutils` / `bind-utils`)."
   },
   {
-   "pealkiri": "1 · Projekt ja inventory",
+   "pealkiri": "1 · Algne playbook",
    "silt": "klassitöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab-1-projekt/\n\nHaru `k02-ansible`, `ansible-inventory --graph` näitab gruppe `web`, `app`, `queue`, `cache`, `db`, `ubuntu`, `alma`.\n\n→ `k02-ansible/ansible.cfg`, `k02-ansible/inventory.ini`, `group_vars/`"
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-1-algne-playbook\n\nHaru `k02-ansible`, kogud paigaldatud, `labseis.yml` käivitatud, `/health` vastab.\n\n→ `k02-ansible/labseis.yml`, `requirements.yml`"
   },
   {
-   "pealkiri": "2 · Esimene roll",
+   "pealkiri": "2 · Leia ja paranda vead",
    "silt": "klassitöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab-2-common/\n\nRoll `common` kõigis viies masinas, `/etc/hosts` mallist.\n\n→ `roles/common`, `site.yml`"
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-2-leia-ja-paranda-vead\n\nIga vea hüpotees kommentaarina selles issue's. `/health` vastab `UP`, teine käivitus `changed=0`."
   },
   {
-   "pealkiri": "3 · Andmebaas",
+   "pealkiri": "3 · Inventory ja muutujad",
    "silt": "klassitöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab-3-andmebaas/\n\nKogud paigaldatud, paroolid Vaultis, MariaDB db01-s koos andmebaasi ja kasutajaga.\n\n→ `requirements.yml`, `group_vars/all/vault.yml`, `roles/mariadb`"
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-3-inventory-ja-muutujad\n\nTeenuse- ja distributsioonigrupid, `ansible_host`, `group_vars` ja `host_vars`.\n\n→ `inventory.ini`, `group_vars/`, `host_vars/`"
   },
   {
-   "pealkiri": "4 · Vahemälu ja järjekord",
+   "pealkiri": "4 · Paroolid Vaulti",
    "silt": "klassitöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab-4-vahemalu-jarjekord/\n\nMemcached mc01-s, RabbitMQ rmq01-s.\n\n→ `roles/memcached`, `roles/rabbitmq`"
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-4-paroolid-vaulti\n\n`vault.yml` algab reaga `$ANSIBLE_VAULT`, Vaulti parool ei ole Gitis.\n\n→ `group_vars/all/vault.yml`"
   },
   {
-   "pealkiri": "5 · Rakendus ja veebiserver",
+   "pealkiri": "5 · Roll common",
    "silt": "klassitöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab-5-rakendus/\n\n`http://<web01>/health` vastab `UP` (db, queue, cache).\n\n→ `roles/tomcat`, `roles/nginx`"
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-5-esimene-roll-common\n\nRoll `common`, `site.yml`, `/etc/hosts` mallist, teine käivitus `changed=0`.\n\n→ `roles/common`, `site.yml`"
   },
   {
-   "pealkiri": "6 · Korduv käivitus ja esitamine",
+   "pealkiri": "6 · Rollid mariadb, memcached, rabbitmq",
    "silt": "klassitöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab-6-esitamine/\n\n`ansible-lint` puhas, teine käivitus `changed=0` (`run2.txt`), PR ühendatud, tag `k02` GitHubis."
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-6-rollid-mariadb-memcached-ja-rabbitmq\n\nKolm rolli, `--check --diff` näitab ainult oodatud muudatusi.\n\n→ `roles/mariadb`, `roles/memcached`, `roles/rabbitmq`"
   },
   {
-   "pealkiri": "H1 · Suurem vahemälu",
+   "pealkiri": "7 · Rollid tomcat ja nginx",
+   "silt": "klassitöö",
+   "nadal": 2,
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-7-rollid-tomcat-ja-nginx\n\n`labseis.yml` kustutatud, `/health` vastab web01 kaudu `UP`.\n\n→ `roles/tomcat`, `roles/nginx`"
+  },
+  {
+   "pealkiri": "8 · Tõestus ja esitamine",
+   "silt": "klassitöö",
+   "nadal": 2,
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-8-toestus-ja-esitamine\n\n`ansible-lint` puhas, `run2.txt` `changed=0`, PR ühendatud, tag `k02` GitHubis."
+  },
+  {
+   "pealkiri": "Kodutöö 1 · Suurem vahemälu",
    "silt": "kodutöö",
    "nadal": 2,
    "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/kodutoo/\n\n`host_vars/mc01.yml`, handler taaskäivitas Memcachedi."
   },
   {
-   "pealkiri": "H2 · Rakenduse mälu",
+   "pealkiri": "Kodutöö 2 · Rakenduse mälu",
    "silt": "kodutöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/kodutoo/\n\n`tomcat_heap: 384m`, `/health` vastab `UP`."
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/kodutoo/\n\n`tomcat_heap: 384m`, `ps` näitab `Xmx384m`."
   },
   {
-   "pealkiri": "H3 · Uus andmebaasi parool",
+   "pealkiri": "Kodutöö 3 · Uus andmebaasi parool",
    "silt": "kodutöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/kodutoo/\n\nParool vahetatud Vaultis, muutusid ainult db01 ja app01."
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/kodutoo/\n\nParool vahetatud Vaultis, `/health` vastab `UP`."
   },
   {
-   "pealkiri": "H4 · Boonus: ajavöönd kõigis masinates",
+   "pealkiri": "Kodutöö 4 · Ajavöönd",
    "silt": "kodutöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/kodutoo/\n\n`community.general` kogu, kõigis masinates `Europe/Tallinn`."
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/kodutoo/\n\n`community.general`, kõigis masinates `Europe/Tallinn`."
   }
  ],
  "nadalad": {
   "2": {
-   "pealkiri": "K2 · Ansible mitmele masinale",
+   "pealkiri": "K2 · Labori seis rollidega",
    "tahtaeg": "enne 3. kohtumist (14.11)",
    "sildid": [
     "K2",
