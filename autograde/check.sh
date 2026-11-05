@@ -174,9 +174,9 @@ k01/final)
 k02/files)
     [[ -d k02-ansible ]] || fail "kaust k02-ansible puudub (1. osa, 1.1)"
     for f in ansible.cfg inventory.ini; do [[ -e "k02-ansible/$f" ]] || fail "puudub k02-ansible/$f (1. osa, 1.1)"; done
-    [[ -e k02-ansible/site.yml ]] || fail "puudub k02-ansible/site.yml (5. osa, 5.3)"
+    [[ -e k02-ansible/site.yml ]] || fail "puudub k02-ansible/site.yml (7. osa, 7.1)"
     [[ -e k02-ansible/requirements.yml ]] || fail "puudub k02-ansible/requirements.yml (1. osa, 1.2)"
-    for r in common:5 mariadb:6 memcached:6 rabbitmq:6 tomcat:7 nginx:7; do
+    for r in common:7 mariadb:7 memcached:7 rabbitmq:7 tomcat:7 nginx:7; do
         [[ -e "k02-ansible/roles/${r%:*}/tasks/main.yml" ]] || fail "puudub k02-ansible/roles/${r%:*}/tasks/main.yml (${r#*:}. osa)"
     done
     crlf=$(grep -rlI $'\r' k02-ansible 2> /dev/null | head -1 || true)
@@ -195,43 +195,43 @@ k02/inventory)
     grep -Eq 'ansible_host=' "$inv" || fail "$inv: ansible_host puudub (3. osa, 3.1)"
     find k02-ansible/host_vars k02-ansible/group_vars -name '*.y*ml' -not -path '*/group_vars/all/*' \
         -not -name 'all.y*ml' 2> /dev/null | grep -q . \
-        || fail "puuduvad group_vars/app.yml ja host_vars/web01.yml: muutujad on ainult kõigi masinate tasemel (3. osa, 3.2)"
+        || fail "puuduvad group_vars/app.yml ja host_vars/web01.yml: muutujad on ainult kõigi masinate tasemel (4. osa, 4.2)"
     pass "inventory grupid, distributsioonigrupid ja muutujate tasemed" ;;
 k02/structure)
     n=$(compgen -G 'k02-ansible/roles/*/templates/*.j2' | wc -l)
-    [[ $n -ge 2 ]] || fail "Jinja2 malle (roles/*/templates/*.j2) on $n, vaja vähemalt 2 (5. osa 5.2, 6. osa)"
-    compgen -G 'k02-ansible/roles/*/handlers/main.yml' > /dev/null || fail "handler'id (roles/*/handlers/main.yml) puuduvad (6. osa, 6.1)"
-    grep -rqs --include='*.yml' 'notify:' k02-ansible/roles || fail "ükski ülesanne ei teavita handler'it (notify:) (6. osa, 6.1)"
-    compgen -G 'k02-ansible/roles/*/defaults/main.yml' > /dev/null || fail "rollidel pole vaikeväärtusi (defaults/main.yml) (5. osa, 5.2)"
+    [[ $n -ge 2 ]] || fail "Jinja2 malle (roles/*/templates/*.j2) on $n, vaja vähemalt 2 (5. osa, 7. osa)"
+    compgen -G 'k02-ansible/roles/*/handlers/main.yml' > /dev/null || fail "handler'id (roles/*/handlers/main.yml) puuduvad (7. osa)"
+    grep -rqs --include='*.yml' 'notify:' k02-ansible/roles || fail "ükski ülesanne ei teavita handler'it (notify:) (5. osa, 7. osa)"
+    compgen -G 'k02-ansible/roles/*/defaults/main.yml' > /dev/null || fail "rollidel pole vaikeväärtusi (defaults/main.yml) (7. osa)"
     grep -rqs --include='*.yml' -E 'os_family' k02-ansible/roles \
-        || fail "tulemüüri ülesandes puudub tingimus when: ansible_facts['os_family'] == \"RedHat\" (6. osa, 6.1)"
+        || fail "tulemüüri ülesandes puudub tingimus when: ansible_facts['os_family'] == \"RedHat\" (7. osa, 7.3)"
     grep -Eq '^collections:' k02-ansible/requirements.yml || fail "requirements.yml: rida collections: puudub (1. osa, 1.2)"
     grep -Eq 'version:' k02-ansible/requirements.yml || fail "requirements.yml: kogudel pole versioone (1. osa, 1.2)"
     pass "mallid, handler'id, vaikeväärtused, distributsiooni tingimus, kogud" ;;
 k02/vault)
     f=k02-ansible/group_vars/all/vault.yml
-    [[ -e "$f" ]] || fail "puudub $f (4. osa: ansible-vault create)"
-    head -1 "$f" | grep -q '^\$ANSIBLE_VAULT' || fail "$f ei ole krüpteeritud: ansible-vault encrypt $f (4. osa)"
+    [[ -e "$f" ]] || fail "puudub $f (6. osa, 6.1: ansible-vault create)"
+    head -1 "$f" | grep -q '^\$ANSIBLE_VAULT' || fail "$f ei ole krüpteeritud: ansible-vault encrypt $f (6. osa)"
     if git ls-files k02-ansible | grep -Eq '(^|/)\.vault_pass|vault_pass(\.txt)?$|\.dec$'; then
-        fail "Vaulti parooli fail on Gitis: git rm --cached <fail>; parool kuulub faili ~/.config/is1/vault_pass (4. osa)"
+        fail "Vaulti parooli fail on Gitis: git rm --cached <fail>; parool kuulub faili ~/.config/is1/vault_pass (6. osa)"
     fi
     # Avatekstis parool: võti *password*/*token*, väärtus pole muutuja ega tühi
     plain=$(grep -rnE --include='*.yml' --include='*.yaml' --exclude='vault.yml' --exclude='*.example' \
         '^\s*[A-Za-z0-9_]*(password|passwd|token)[A-Za-z0-9_]*:\s*["'"'"']?[^"'"'"'{[:space:]#]' k02-ansible \
         | grep -Ev 'update_password:|no_log:' || true)
-    [[ -z "$plain" ]] || fail "avatekstis saladus, pane see vault.yml-i ja viita {{ vault_... }} (4. osa): $(head -1 <<< "$plain" | cut -d: -f1-2)"
+    [[ -z "$plain" ]] || fail "avatekstis saladus, pane see vault.yml-i ja viita {{ vault_... }} (6. osa): $(head -1 <<< "$plain" | cut -d: -f1-2)"
     pass "saladused Vaultis" ;;
 k02/idempotent)
     f=k02-ansible/run2.txt
-    [[ -e "$f" ]] || fail "puudub $f: ansible-playbook site.yml | tee run2.txt (8. osa, 8.3)"
+    [[ -e "$f" ]] || fail "puudub $f: ansible-playbook site.yml | tee run2.txt (8. osa, 8.4)"
     recap=$(grep -E '^[A-Za-z0-9_.-]+\s+:\s+ok=[0-9]+' "$f" || true)
-    [[ $(grep -c . <<< "$recap") -ge 5 ]] || fail "$f: PLAY RECAP-is pole viit masinat, käivita kogu site.yml ilma --limit'ita (8. osa, 8.3)"
+    [[ $(grep -c . <<< "$recap") -ge 5 ]] || fail "$f: PLAY RECAP-is pole viit masinat, käivita kogu site.yml ilma --limit'ita (8. osa, 8.4)"
     if grep -Eq '(changed|failed|unreachable)=[1-9]' <<< "$recap"; then
-        fail "teine käivitus ei ole puhas, paranda ülesanne ja salvesta run2.txt uuesti (8. osa, 8.3): $(grep -E '(changed|failed|unreachable)=[1-9]' <<< "$recap" | head -1 | tr -s ' ')"
+        fail "teine käivitus ei ole puhas, paranda ülesanne ja salvesta run2.txt uuesti (8. osa, 8.4): $(grep -E '(changed|failed|unreachable)=[1-9]' <<< "$recap" | head -1 | tr -s ' ')"
     fi
     pass "teine käivitus: changed=0" ;;
 k02/syntax)
-    [[ -e k02-ansible/site.yml ]] || fail "puudub k02-ansible/site.yml (5. osa, 5.3)"
+    [[ -e k02-ansible/site.yml ]] || fail "puudub k02-ansible/site.yml (7. osa, 7.1)"
     tool ansible-playbook
     work=$(ansible_copy) || fail "requirements.yml kogude paigaldus kukkus: kontrolli nimesid ja versioone (1. osa, 1.2)"
     cd "$work" || fail "ajutine kaust puudub"
@@ -245,8 +245,8 @@ k02/syntax)
     pass "syntax-check" ;;
 k02/lint)
     # Tühi kaust ei ole puhas töö: lint ainult siis, kui site.yml ja rollid on olemas
-    [[ -e k02-ansible/site.yml ]] || fail "puudub k02-ansible/site.yml (5. osa, 5.3)"
-    compgen -G 'k02-ansible/roles/*/tasks/main.yml' > /dev/null || fail "rollid puuduvad (5.–7. osa)"
+    [[ -e k02-ansible/site.yml ]] || fail "puudub k02-ansible/site.yml (7. osa, 7.1)"
+    compgen -G 'k02-ansible/roles/*/tasks/main.yml' > /dev/null || fail "rollid puuduvad (7. osa)"
     tool ansible-lint
     nq=$(grep -rn --include='*.yml' --include='*.yaml' 'noqa' k02-ansible | wc -l)
     [[ $nq -le 3 ]] || fail "# noqa on $nq korda (lubatud kuni 3, igaühel põhjendus)"
@@ -258,7 +258,7 @@ k02/lint)
     # Kõik reeglid kehtivad: õppija enda skip_list ei loe
     rm -rf .ansible-lint .ansible-lint.yml .ansible-lint.yaml .config/ansible-lint.yml
     ansible-lint --offline -q --nocolor 2>&1 | grep -v 'DEPRECATION WARNING' ; rc=${PIPESTATUS[0]}
-    [[ $rc -eq 0 ]] || fail "ansible-lint leidis vigu (ülal: reegel, fail ja rida). Kontrolli ise: cd ~/kursus/k02-ansible && ansible-lint (8. osa, 8.2)"
+    [[ $rc -eq 0 ]] || fail "ansible-lint leidis vigu (ülal: reegel, fail ja rida). Kontrolli ise: cd ~/kursus/k02-ansible && ansible-lint (8. osa, 8.4)"
     pass "ansible-lint puhas" ;;
 k02/h1)
     f=k02-ansible/host_vars/mc01.yml
@@ -267,7 +267,7 @@ k02/h1)
     pass "kodutöö H1: mc01 vahemälu 128 MB" ;;
 k02/h2)
     f=k02-ansible/group_vars/app.yml
-    [[ -e "$f" ]] || fail "puudub $f (3. osa, 3.2)"
+    [[ -e "$f" ]] || fail "puudub $f (4. osa, 4.1)"
     grep -Eq '^tomcat_heap:[[:space:]]*["'"'"']?384m' "$f" || fail "$f: rida tomcat_heap: 384m puudub (kodutöö, 2. osa)"
     pass "kodutöö H2: tomcat_heap 384m" ;;
 k02/h4)

@@ -254,6 +254,7 @@
       ansible.builtin.uri:
         url: http://localhost:8080/health/live
       register: live
+      check_mode: false
       until: live.status == 200
       retries: 40
       delay: 5

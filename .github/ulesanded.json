@@ -72,7 +72,7 @@
    "pealkiri": "1 · Algne playbook",
    "silt": "klassitöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-1-algne-playbook\n\nHaru `k02-ansible`, kogud paigaldatud, `labseis.yml` käivitatud, `/health` vastab.\n\n→ `k02-ansible/labseis.yml`, `requirements.yml`"
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-1-algne-playbook\n\nHaru `k02-ansible`, kogud paigaldatud, `labseis.yml` käivitatud, failist leitud kuus asja, mis välja lähevad."
   },
   {
    "pealkiri": "2 · Leia ja paranda vead",
@@ -81,40 +81,40 @@
    "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-2-leia-ja-paranda-vead\n\nIga vea hüpotees kommentaarina selles issue's. `/health` vastab `UP`, teine käivitus `changed=0`."
   },
   {
-   "pealkiri": "3 · Inventory ja muutujad",
+   "pealkiri": "3 · Masinanimedest gruppideks",
    "silt": "klassitöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-3-inventory-ja-muutujad\n\nTeenuse- ja distributsioonigrupid, `ansible_host`, `group_vars` ja `host_vars`.\n\n→ `inventory.ini`, `group_vars/`, `host_vars/`"
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-3-masinanimedest-gruppideks\n\nTeenuse- ja distributsioonigrupid, play'd gruppidele, IP inventory'st, `--check --diff` `changed=0`.\n\n→ `inventory.ini`"
   },
   {
-   "pealkiri": "4 · Paroolid Vaulti",
+   "pealkiri": "4 · Väärtused muutujatesse",
    "silt": "klassitöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-4-paroolid-vaulti\n\n`vault.yml` algab reaga `$ANSIBLE_VAULT`, Vaulti parool ei ole Gitis.\n\n→ `group_vars/all/vault.yml`"
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-4-vaartused-muutujatesse\n\n`group_vars/all/main.yml`, `group_vars/app.yml`, `host_vars/web01.yml`, `changed=0`."
   },
   {
-   "pealkiri": "5 · Roll common",
+   "pealkiri": "5 · Konfiguratsioonitekst mallidesse",
    "silt": "klassitöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-5-esimene-roll-common\n\nRoll `common`, `site.yml`, `/etc/hosts` mallist, teine käivitus `changed=0`.\n\n→ `roles/common`, `site.yml`"
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-5-konfiguratsioonitekst-mallidesse\n\nNginxi, Memcachedi ja Tomcati mallid, muutus ainult `# Ansible managed`.\n\n→ `templates/`"
   },
   {
-   "pealkiri": "6 · Rollid mariadb, memcached, rabbitmq",
+   "pealkiri": "6 · Paroolid Vaulti",
    "silt": "klassitöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-6-rollid-mariadb-memcached-ja-rabbitmq\n\nKolm rolli, `--check --diff` näitab ainult oodatud muudatusi.\n\n→ `roles/mariadb`, `roles/memcached`, `roles/rabbitmq`"
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-6-paroolid-vaulti\n\n`vault.yml` algab reaga `$ANSIBLE_VAULT`, `grep 2026 labseis.yml` annab 0, `/health` `UP`."
   },
   {
-   "pealkiri": "7 · Rollid tomcat ja nginx",
+   "pealkiri": "7 · Teenused rollideks",
    "silt": "klassitöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-7-rollid-tomcat-ja-nginx\n\n`labseis.yml` kustutatud, `/health` vastab web01 kaudu `UP`.\n\n→ `roles/tomcat`, `roles/nginx`"
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-7-teenused-rollideks\n\nKuus rolli, `site.yml`, `labseis.yml` kustutatud, lõppkontroll `ok`.\n\n→ `roles/`, `site.yml`"
   },
   {
    "pealkiri": "8 · Tõestus ja esitamine",
    "silt": "klassitöö",
    "nadal": 2,
-   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-8-toestus-ja-esitamine\n\n`ansible-lint` puhas, `run2.txt` `changed=0`, PR ühendatud, tag `k02` GitHubis."
+   "keha": "Juhend: https://hkhk-tk.github.io/is1-automatiseerimine/k02/lab/#osa-8-toestus\n\nTriiv taastatud, `ansible-lint` puhas, `run2.txt` `changed=0`, PR ühendatud, tag `k02` GitHubis."
   },
   {
    "pealkiri": "Kodutöö 1 · Suurem vahemälu",
