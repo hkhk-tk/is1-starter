@@ -248,7 +248,7 @@
         mode: "0644"
 
     - name: Tomcat taaskäivitatakse, et seaded rakenduksid
-      ansible.builtin.command: systemctl restart tomcat10
+      ansible.builtin.shell: systemctl daemon-reload && systemctl restart tomcat10
 
     - name: Rakendus vastab
       ansible.builtin.uri:
