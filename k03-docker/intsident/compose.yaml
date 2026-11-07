@@ -1,0 +1,74 @@
+# 3. kohtumine, osa 8: Labori seis teise projektina pordil 8090.
+# Kasutab sinu image'eid (.env: REGISTRY, OWNER, TAG). Käivitus:
+#   docker compose -f intsident/compose.yaml --env-file .env up -d
+name: labori-seis-intsident
+
+services:
+  db01:
+    image: ${REGISTRY:?}/${OWNER:?}/labori-seis-db:${TAG:-dev}
+    user: "999:999"
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?}
+      MARIADB_DATABASE: labseis
+      MARIADB_USER: labseis
+      MARIADB_PASSWORD: ${DB_PASSWORD:?}
+    volumes:
+      - ./data:/var/lib/mysql
+    networks: [back]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      retries: 10
+
+  mc01:
+    image: ${HUB:-docker.io/library}/memcached:1.6-alpine
+    networks: [back]
+    healthcheck:
+      test: ["CMD-SHELL", "echo stats | nc -w 1 127.0.0.1 11212 | grep -q uptime"]
+      interval: 10s
+      retries: 3
+
+  rmq01:
+    image: ${HUB:-docker.io/library}/rabbitmq:4.1-management-alpine
+    hostname: rmq01
+    environment:
+      RABBITMQ_DEFAULT_USER: labseis
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?}
+    volumes:
+      - rmqdata:/var/lib/rabbitmq
+    networks: [back]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      retries: 10
+
+  app01:
+    image: ${REGISTRY:?}/${OWNER:?}/labori-seis-app:${TAG:-dev}
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD:?}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?}
+      TEACHER_TOKEN: ${TEACHER_TOKEN:?}
+    networks: [back]
+    depends_on:
+      db01:
+        condition: service_healthy
+      mc01:
+        condition: service_healthy
+      rmq01:
+        condition: service_healthy
+
+  web01:
+    image: ${REGISTRY:?}/${OWNER:?}/labori-seis-web:${TAG:-dev}
+    ports:
+      - "8090:80"
+    networks: [front]
+    depends_on:
+      app01:
+        condition: service_healthy
+
+networks:
+  front:
+  back:
+
+volumes:
+  rmqdata:

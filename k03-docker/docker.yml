@@ -1,0 +1,6 @@
+- name: Docker control node'is
+  hosts: localhost
+  connection: local
+  become: true
+  roles:
+    - docker
