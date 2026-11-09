@@ -1,4 +1,4 @@
-# app01 image (praktikum 3.2): kaks astet, lõppimage'isse jõuab ainult WAR.
+# app01 image (praktikum 3.1): kaks astet, lõppimage'isse jõuab ainult WAR.
 # See on mall: täida TODO-read. Ehituskontekst on repositooriumi juur (..).
 ARG HUB=docker.io/library
 

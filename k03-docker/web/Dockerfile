@@ -1,4 +1,4 @@
-# web01 image (praktikum 2.4): ametlik Nginx ja starteri nginx.conf mallina.
+# web01 image (praktikum 2.2): ametlik Nginx ja starteri nginx.conf mallina.
 # See on mall: täida TODO-read. Ehituskontekst on kaust web/.
 ARG HUB=docker.io/library
 # TODO: FROM, baas nginx:1.30-alpine eesliitega ${HUB}
