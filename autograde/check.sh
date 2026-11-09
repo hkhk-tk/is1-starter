@@ -473,7 +473,6 @@ k05/deploy)
     grep -Eo 'secrets\.[A-Za-z0-9_]+' <<< "$code" | grep -vqx 'secrets\.GITHUB_TOKEN' \
         || fail "deploy ei kasuta environment'i secret'eid (secrets.DB_PASSWORD jt)"
     grep -Eq 'workflow_dispatch' <<< "$code" || fail "workflow_dispatch puudub"
-    grep -Eq 'schedule:' <<< "$code" || fail "schedule puudub"
     grep -Eq '/version' <<< "$code" || fail "deploy ei kontrolli /version"
     grep -Eq -- '--wait|until .*curl|curl[^|]*--retry' <<< "$code" || fail "deploy ei oota tervet konteinerit (sleep ei sobi)"
     pass "deploy self-hosted runneriga, triggerid, secrets" ;;

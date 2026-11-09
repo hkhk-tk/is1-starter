@@ -38,8 +38,8 @@ read lõpetavad kohe `SKIP` teatega (0 p, tööriistu ei laadita). K1–K3 jooks
 | K4 | saladusi koodis pole | `bash autograde/check.sh k04 secrets` | 15 |
 | K4 | fmt | `bash autograde/check.sh k04 fmt` | 10 |
 | K4 | validate | `bash autograde/check.sh k04 validate` | 30 |
-| K4 | provider, data, for_each, CPU, tagid, inventory | `bash autograde/check.sh k04 resources` | 15 |
-| K4 | moodul | `bash autograde/check.sh k04 module` | 15 |
+| K4 | provider, data, for_each, CPU, tagid, inventory | `bash autograde/check.sh k04 resources` | 30 |
+| K4 | BOONUS: moodul (IS2) | `bash autograde/check.sh k04 module` | 0 |
 | K5 | workflow + K3 failid | `bash autograde/check.sh k05 files` | 10 |
 | K5 | actionlint | `bash autograde/check.sh k05 actionlint` | 25 |
 | K5 | build + test (push, PR, Java 21, mvn verify) | `bash autograde/check.sh k05 build` | 15 |
@@ -58,8 +58,8 @@ read lõpetavad kohe `SKIP` teatega (0 p, tööriistu ei laadita). K1–K3 jooks
 | K7 | kubeconform -strict | `bash autograde/check.sh k07 kubeconform` | 20 |
 | K7 | objektid, probe'id, resources, initContainers, init ConfigMap | `bash autograde/check.sh k07 objects` | 25 |
 | K7 | hügieen: namespace, Secret, :latest, host | `bash autograde/check.sh k07 hygiene` | 15 |
-| K7 | Argo CD Application | `bash autograde/check.sh k07 gitops` | 15 |
-| K7 | CI uuendab image'i tagi manifestis (gitops.yml) | `bash autograde/check.sh k07 cibump` | 15 |
+| K7 | Argo CD Application | `bash autograde/check.sh k07 gitops` | 30 |
+| K7 | BOONUS: CI uuendab image'i tagi manifestis (gitops.yml) | `bash autograde/check.sh k07 cibump` | 0 |
 | – | saladused Gitis (AWS võtmed, privaatvõtmed, tfstate, kubeconfig) | `bash autograde/check.sh cloud secrets` | 0 (hoiatus) |
 
 `cloud secrets` lisa 0-punktisena (kui Classroom 50 ei luba 0 p testi, siis 1 p). Väljundis on ainult failinimed.
