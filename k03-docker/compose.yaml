@@ -1,24 +1,24 @@
 # Labori seis Compose'iga (praktikum, 4. osa).
-# See on mall. Täida db01 TODO 4.1 järgi. Järgmise teenuse juures eemalda
+# See on mall. Täida db01 TODO 4.2 järgi. Järgmise teenuse juures eemalda
 # kommentaarimärgid ja täida see: Compose kontrollib kogu faili, nii et iga
 # teenus peab olema täidetud enne, kui see kommentaarist välja tuleb.
 name: labori-seis
 
 services:
   db01:
-    # TODO 4.1: build, image, environment, volumes, healthcheck
+    # TODO 4.2: build, image, environment, volumes, healthcheck
 
   # mc01:
-  #   TODO 4.2: image, healthcheck
+  #   TODO 4.3: image, healthcheck
 
   # rmq01:
-  #   TODO 4.2: image, hostname, environment, ports, volumes, healthcheck
+  #   TODO 4.3: image, hostname, environment, ports, volumes, healthcheck
 
   # app01:
-  #   TODO 4.3: build, image, environment, depends_on
+  #   TODO 4.4: build, image, environment, depends_on
 
   # web01:
-  #   TODO 4.4: build, image, ports, depends_on
+  #   TODO 4.5: build, image, ports, depends_on
 
 volumes:
   dbdata:
