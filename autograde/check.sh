@@ -358,6 +358,26 @@ k03/build)
     # Compose ehitab kõik build:-iga teenused (app01, db01, web01) nende oma kontekstiga. Maveni tõttu 2–4 min.
     docker compose -f k03-docker/compose.yaml --env-file "$AUTOGRADE_TMP/autograde.env" build --quiet || fail "image'id ei ehitu"
     pass "app, db ja web image ehituvad" ;;
+# Kodutöö boonus (0 p): ainult failid, mitte Dockeri paigaldus
+k03/h1)
+    t=k03-docker/roles/docker/tasks/main.yml
+    [[ -e "$t" ]] || fail "puudub $t (kodutöö, 1. osa)"
+    grep -q 'docker-ce' "$t" || fail "$t: Docker Engine'i paketti docker-ce ei paigaldata (kodutöö, 1. osa)"
+    grep -q 'daemon.json' "$t" || fail "$t: /etc/docker/daemon.json ülesanne puudub (kodutöö, 1. osa)"
+    [[ -e k03-docker/roles/docker/handlers/main.yml ]] || fail "puudub k03-docker/roles/docker/handlers/main.yml (kodutöö, 1. osa)"
+    pass "kodutöö H1: roll docker" ;;
+k03/h2)
+    f=k03-docker/stack.yml
+    [[ -e "$f" ]] || fail "puudub $f (kodutöö, 2. osa)"
+    grep -q 'docker\.yml' "$f" || fail "$f: Dockeri playbook docker.yml pole kaasatud (kodutöö, 2. osa)"
+    grep -q 'docker_compose_v2' "$f" || fail "$f: moodulit community.docker.docker_compose_v2 pole (kodutöö, 2. osa)"
+    pass "kodutöö H2: stack playbook'iga" ;;
+k03/h3)
+    f=k03-docker/stack.yml
+    [[ -e "$f" ]] || fail "puudub $f (kodutöö, 2. osa)"
+    grep -q 'vault' "$f" || fail "$f: Vaulti faili ei loeta (kodutöö, 3. osa)"
+    grep -q 'no_log: *true' "$f" || fail "$f: .env ülesandel puudub no_log: true (kodutöö, 3. osa)"
+    pass "kodutöö H3: paroolid Vaultist" ;;
 
 # ---------- K4 OpenTofu ----------
 k04/files)
