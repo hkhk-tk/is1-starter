@@ -10,7 +10,7 @@
 set -uo pipefail
 shopt -s nullglob   # tühi glob = tühi loend, mitte sõna-sõnalt "k01-bash/*.sh"
 
-day="${1:?päev puudub (k01..k07, cloud)}"
+day="${1:?päev puudub (k01..k07, ci, jenkins, cloud)}"
 name="${2:?kontroll puudub}"
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 TOOLS="${AUTOGRADE_TOOLS:-$HOME/.cache/autograde}"
@@ -443,16 +443,114 @@ k04/module)
     grep -hv '^\s*#' "${root[@]}" | grep -q 'module\.' || fail "mooduli väljundit (module.<nimi>…) ei kasutata"
     pass "moodul ja selle väljundid" ;;
 
-# ---------- K5 GitHub Actions (asendab praegused k05/files, k05/actionlint, k05/stages) ----------
+# ---------- K5 Kubernetes k3s-is ----------
+# Kohustuslik 100 p: files 15, manifest 45, logid 40. Boonus 0 p: ingress, argocd.
+# Manifestid = k05-k8s/ ülemise taseme *.yaml/*.yml. Klastrit autograder ei näe: olek tuleb logid/*.txt failist.
+k05/files)
+    need_files k05-k8s/deployment.yaml k05-k8s/service.yaml
+    tracked=$(git ls-files k05-k8s)
+    [[ -n "$tracked" ]] || fail "k05-k8s/ failid ei ole Gitis (git add)"
+    grep -q 'deployment.yaml' <<< "$tracked" || fail "k05-k8s/deployment.yaml ei ole Gitis"
+    grep -q 'service.yaml' <<< "$tracked" || fail "k05-k8s/service.yaml ei ole Gitis"
+    if git grep -lIE 'client-key-data:|client-certificate-data:' -- k05-k8s > /dev/null 2>&1; then
+        fail "kubeconfig on k05-k8s/ kaustas Gitis: eemalda see (git rm --cached) ja ära lisa seda Giti"
+    fi
+    pass "deployment.yaml ja service.yaml Gitis, kubeconfig'i pole" ;;
+k05/manifest)
+    need_files k05-k8s/deployment.yaml k05-k8s/service.yaml
+    tool kubeconform
+    m=(k05-k8s/*.yaml k05-k8s/*.yml)
+    out=$(kubeconform -strict -summary "${m[@]}") || { echo "$out"; fail "kubeconform leidis vigu (taane või vale välja nimi?)"; }
+    d=$(grep -v '^\s*#' k05-k8s/deployment.yaml)
+    sv=$(grep -v '^\s*#' k05-k8s/service.yaml)
+    grep -Eq '^kind: *Deployment' <<< "$d" || fail "deployment.yaml: kind: Deployment puudub"
+    grep -Eq 'image: *"?traefik/whoami:v[0-9]' <<< "$d" || fail "deployment.yaml: image peab olema traefik/whoami:v… (tag algab v-ga)"
+    grep -Eq 'replicas: *[2-9]' <<< "$d" || fail "deployment.yaml: replicas peab olema vähemalt 2"
+    grep -Eq '^kind: *Service' <<< "$sv" || fail "service.yaml: kind: Service puudub"
+    grep -Eq 'type: *NodePort' <<< "$sv" || fail "service.yaml: type: NodePort puudub"
+    grep -Eq 'nodePort: *30080' <<< "$sv" || fail "service.yaml: nodePort: 30080 puudub"
+    grep -Eq 'app: *tere' <<< "$sv" || fail "service.yaml: selector peab otsima silti app: tere"
+    [[ $(grep -Ec 'app: *tere' <<< "$d") -ge 2 ]] || fail "deployment.yaml: silt app: tere peab olema nii selector'is kui mallis"
+    pass "Deployment ja NodePort Service valideeruvad, sildid klapivad" ;;
+k05/logid)
+    logs=(k05-k8s/logid/*.txt)
+    [[ ${#logs[@]} -gt 0 ]] || fail "k05-k8s/logid/*.txt puudub (kubectl get nodes,deployments,pods,services -o wide > k05-k8s/logid/klaster.txt)"
+    all=$(cat "${logs[@]}")
+    grep -Eq ' Ready ' <<< "$all" || fail "logis pole node'i olekus Ready"
+    grep -Eq '(deployment\.apps/)?tere +([2-9])/\2 ' <<< "$all" || fail "logis pole Deployment'i tere, mille kõik pod'id on valmis (näiteks 4/4)"
+    [[ $(grep -Ec 'tere-[a-z0-9]+-[a-z0-9]+ +1/1 +Running' <<< "$all") -ge 2 ]] || fail "logis pole vähemalt kahte Running pod'i tere-…"
+    grep -Eq '80:30080/TCP' <<< "$all" || fail "logis pole Service'it pordiga 80:30080"
+    pass "klaster töötab: node Ready, tere valmis, Service 30080" ;;
+k05/ingress)
+    need_files k05-k8s/ingress.yaml
+    grep -Eq '^kind: *Ingress' k05-k8s/ingress.yaml || fail "ingress.yaml: kind: Ingress puudub"
+    pass "boonus: Ingress olemas" ;;
+k05/argocd)
+    need_files k05-k8s/argocd/application.yaml
+    grep -Eq '^kind: *Application' k05-k8s/argocd/application.yaml || fail "application.yaml: kind: Application puudub"
+    grep -q 'k05-k8s' k05-k8s/argocd/application.yaml || fail "application.yaml: path peab olema k05-k8s"
+    pass "boonus: Argo CD Application olemas" ;;
+
+# ---------- K6 AWS käsurealt ----------
+# Kohustuslik 100 p: files 20, fmt 10, validate 20, secrets 15, resources 15, logid 20.
+k06/files)
+    need_files k06-aws/main.tf k06-aws/web.yml k06-aws/.terraform.lock.hcl
+    tracked=$(git ls-files k06-aws)
+    [[ -n "$tracked" ]] || fail "k06-aws/ failid ei ole Gitis (git add)"
+    bad=$(grep -E '\.tfstate|(^|/)terraform\.tfvars$|\.auto\.tfvars$|(^|/)\.terraform/|\.tfplan$|(^|/)inventory\.ini$' <<< "$tracked" || true)
+    [[ -z "$bad" ]] || fail "need ei tohi olla Gitis: $(tr '\n' ' ' <<< "$bad")(git rm --cached …, lisa .gitignore'i)"
+    pass "main.tf, web.yml ja lukufail Gitis, state/tfvars/inventory väljas" ;;
+k06/fmt)
+    need_files k06-aws/main.tf
+    tool tofu
+    tofu -chdir=k06-aws fmt -check -recursive || fail "tofu fmt -check: vorminda (tofu -chdir=k06-aws fmt)"
+    pass "vormindatud" ;;
+k06/validate)
+    need_files k06-aws/main.tf k06-aws/.terraform.lock.hcl
+    tool tofu
+    tofu -chdir=k06-aws init -backend=false -input=false -lockfile=readonly > /dev/null \
+        || fail "tofu init kukkus (kas .terraform.lock.hcl on Gitis ja ajakohane?)"
+    tofu -chdir=k06-aws validate || fail "tofu validate kukkus"
+    pass "tofu validate" ;;
+k06/secrets)
+    mapfile -t tracked < <(git ls-files k06-aws)
+    [[ ${#tracked[@]} -gt 0 ]] || fail "k06-aws/ failid ei ole Gitis"
+    if grep -lE '(AKIA|ASIA)[A-Z0-9]{16}' "${tracked[@]}" | grep -q .; then fail "AWS-i võti on Gitis: kustuta võti IAM-is ja eemalda fail"; fi
+    if grep -l 'PRIVATE KEY' "${tracked[@]}" | grep -q .; then fail "privaatvõti on Gitis"; fi
+    tfs=(k06-aws/*.tf)
+    if grep -hv '^\s*#' "${tfs[@]}" | grep -Eq '(access_key|secret_key) *='; then
+        fail "providerisse on kirjutatud võti: kasuta aws login'it ja AWS_PROFILE-t"
+    fi
+    pass "võtmeid Gitis pole" ;;
+k06/resources)
+    tfs=(k06-aws/*.tf)
+    [[ ${#tfs[@]} -gt 0 ]] || fail "k06-aws/*.tf puuduvad"
+    code=$(grep -hv '^\s*#' "${tfs[@]}")
+    grep -q 'hashicorp/aws\|opentofu/aws' <<< "$code" || fail "provider aws puudub"
+    grep -q 'resource "aws_instance"' <<< "$code" || fail "EC2 masin (aws_instance) puudub"
+    grep -q 'resource "aws_security_group"' <<< "$code" || fail "security group puudub"
+    grep -q 'resource "aws_vpc_security_group_egress_rule"' <<< "$code" || fail "väljaminev reegel puudub: masin ei pääse internetti (osa 5)"
+    grep -Eq 'data "aws_(ssm_parameter|ami)"' <<< "$code" || fail "AMI ei tule data source'ist (number koodis vananeb)"
+    grep -q 'resource "local_file"' <<< "$code" || fail "inventory't ei tehta OpenTofu väljundist (local_file)"
+    pass "provider, security group koos reeglitega, AMI data source'ist, masin, inventory" ;;
+k06/logid)
+    logs=(k06-aws/logid/*.txt)
+    [[ ${#logs[@]} -gt 0 ]] || fail "k06-aws/logid/*.txt puudub"
+    all=$(cat "${logs[@]}")
+    grep -Eq 'changed=0 ' <<< "$all" || fail "logis pole playbook'i teist käivitust changed=0"
+    grep -q 'tasulisi jääke pole' <<< "$all" || fail "logis pole koristuse tulemust TULEMUS: tasulisi jääke pole"
+    pass "teine käivitus changed=0 ja koristus tehtud" ;;
+
+# ---------- Lisaülesanne: GitHub Actions (endine K5; kasutus: check.sh ci <kontroll>) (asendab praegused k05/files, k05/actionlint, k05/stages) ----------
 # Kõik kontrollid loevad KÕIKI õppija workflow'sid (user_workflows), kommentaarid eemaldatakse enne grep'i.
 # Tühi .github/workflows/ annab FAIL, mitte OK.
-k05/files)
+ci/files)
     mapfile -t wf < <(user_workflows)
     [[ ${#wf[@]} -gt 0 ]] || fail ".github/workflows/ ei sisalda ühtegi workflow'd"
     need_files pom.xml k03-docker/app/Dockerfile k03-docker/compose.yaml
     if git ls-files --error-unmatch k03-docker/.env > /dev/null 2>&1; then fail "k03-docker/.env on Gitis"; fi
     pass "workflow (${#wf[@]}) ja K3 failid olemas" ;;
-k05/actionlint)
+ci/actionlint)
     tool actionlint
     mapfile -t wf < <(user_workflows)
     [[ ${#wf[@]} -gt 0 ]] || fail "workflow puudub"
@@ -461,7 +559,7 @@ k05/actionlint)
     fi
     actionlint "${wf[@]}" || fail "actionlint leidis vigu"
     pass "actionlint puhas" ;;
-k05/build)
+ci/build)
     mapfile -t wf < <(user_workflows)
     [[ ${#wf[@]} -gt 0 ]] || fail "workflow puudub"
     code=$(sed -e '/^[[:space:]]*#/d' -e 's/[[:space:]]#.*$//' "${wf[@]}")
@@ -471,7 +569,7 @@ k05/build)
     grep -Eq "java-version:[[:space:]]*['\"]?21" <<< "$code" || fail "Java 21 pole valitud (java-version: \"21\")"
     grep -Eq '(mvn|mvnw)[^|;&]*[[:space:]](verify|install)\b' <<< "$code" || fail "mvn verify puudub"
     pass "build + test igal push'il ja PR-il" ;;
-k05/structure)
+ci/structure)
     mapfile -t wf < <(user_workflows)
     [[ ${#wf[@]} -gt 0 ]] || fail "workflow puudub"
     code=$(sed -e '/^[[:space:]]*#/d' -e 's/[[:space:]]#.*$//' "${wf[@]}")
@@ -484,7 +582,7 @@ k05/structure)
     grep -Eq 'ghcr\.io' <<< "$code" || fail "image ei lähe ghcr.io-sse"
     grep -Eq 'GIT_SHA' <<< "$code" || fail "image ei saa commit'i (build-args: GIT_SHA=...)"
     pass "build ‖ security → image" ;;
-k05/deploy)
+ci/deploy)
     mapfile -t wf < <(user_workflows)
     [[ ${#wf[@]} -gt 0 ]] || fail "workflow puudub"
     code=$(sed -e '/^[[:space:]]*#/d' -e 's/[[:space:]]#.*$//' "${wf[@]}")
@@ -496,7 +594,7 @@ k05/deploy)
     grep -Eq '/version' <<< "$code" || fail "deploy ei kontrolli /version"
     grep -Eq -- '--wait|until .*curl|curl[^|]*--retry' <<< "$code" || fail "deploy ei oota tervet konteinerit (sleep ei sobi)"
     pass "deploy self-hosted runneriga, triggerid, secrets" ;;
-k05/hygiene)
+ci/hygiene)
     mapfile -t wf < <(user_workflows)
     [[ ${#wf[@]} -gt 0 ]] || fail "workflow puudub"
     if grep -nE '(ghp_|github_pat_|gho_|AKIA[0-9A-Z]{16})' "${wf[@]}"; then fail "token/võti otse failis"; fi
@@ -512,12 +610,12 @@ k05/hygiene)
     fi
     pass "saladusi pole, action'id kinnitatud" ;;
 
-# ---------- K6 Jenkins ----------
+# ---------- Lisaülesanne: Jenkins ---------- (endine K6; kasutus: check.sh jenkins <kontroll>)
 # Kommentaarid (// ja /* */) eemaldatakse enne kontrolli, et välja kommenteeritud etapp punkte ei annaks.
-k06/files)
+jenkins/files)
     need_files k06-jenkins/Jenkinsfile k06-jenkins/settings.xml k06-jenkins/Dockerfile
     pass "Jenkinsfile, settings.xml, Dockerfile olemas" ;;
-k06/stages)
+jenkins/stages)
     need_files k06-jenkins/Jenkinsfile
     code=$(perl -0pe 's#/\*.*?\*/##gs; s#(^|\s)//[^\n]*#$1#g' k06-jenkins/Jenkinsfile)
     grep -Eq '^[[:space:]]*pipeline[[:space:]]*\{' <<< "$code" || fail "deklaratiivne pipeline { } puudub"
@@ -526,14 +624,14 @@ k06/stages)
     grep -q 'mvn' <<< "$code" || fail "Maven käsk puudub"
     grep -q 'junit' <<< "$code" || fail "testiraport (junit) puudub"
     pass "build ja test etapid, testiraport" ;;
-k06/agent)
+jenkins/agent)
     need_files k06-jenkins/Jenkinsfile
     code=$(perl -0pe 's#/\*.*?\*/##gs; s#(^|\s)//[^\n]*#$1#g' k06-jenkins/Jenkinsfile)
     grep -Eq 'agent[[:space:]]+any' <<< "$code" && fail "agent any: controller ei ehita, kasuta agent { label ... }"
     grep -Eq 'agent[[:space:]]*\{[[:space:]]*label' <<< "$code" || fail "agent { label '<sinu github nimi>' } puudub"
     grep -Eq "^[[:space:]]*(maven|jdk)[[:space:]]+[\"']" <<< "$code" || fail "tools { maven / jdk } puudub"
     pass "build jookseb sinu agendil" ;;
-k06/quality)
+jenkins/quality)
     need_files k06-jenkins/Jenkinsfile
     code=$(perl -0pe 's#/\*.*?\*/##gs; s#(^|\s)//[^\n]*#$1#g' k06-jenkins/Jenkinsfile)
     s=$(grep -n 'withSonarQubeEnv' <<< "$code" | head -1 | cut -d: -f1)
@@ -547,7 +645,7 @@ k06/quality)
     [[ -n "$key" ]] || fail "-Dsonar.projectKey=... puudub"
     [[ "$key" == "sonar.projectKey=labori-seis" ]] && fail "projectKey peab olema õppijapõhine (labori-seis-<github>)"
     pass "SonarQube + quality gate" ;;
-k06/nexus)
+jenkins/nexus)
     need_files k06-jenkins/Jenkinsfile k06-jenkins/settings.xml
     code=$(perl -0pe 's#/\*.*?\*/##gs; s#(^|\s)//[^\n]*#$1#g' k06-jenkins/Jenkinsfile)
     grep -Eq 'nexusArtifactUploader|/repository/' <<< "$code" || fail "Nexuse üleslaadimine puudub"
@@ -556,7 +654,7 @@ k06/nexus)
     grep -Eq "\-s[[:space:]]+[^[:space:]\"']*settings\.xml" <<< "$code" \
         || fail "Maven ei kasuta settings.xml-i (-s k06-jenkins/settings.xml)"
     pass "artefakt Nexusesse, sõltuvused Nexusest" ;;
-k06/secrets)
+jenkins/secrets)
     need_files k06-jenkins/Jenkinsfile
     code=$(perl -0pe 's#/\*.*?\*/##gs; s#(^|\s)//[^\n]*#$1#g' k06-jenkins/Jenkinsfile)
     if grep -Eiq "(pass(word|wd)?|parool|token|secret)[A-Z_]*[[:space:]]*[=:][[:space:]]*[\"'][^\"'\$]{4,}" <<< "$code"; then
@@ -564,13 +662,13 @@ k06/secrets)
     fi
     grep -Eq 'credentialsId|withCredentials' <<< "$code" || fail "credentialid ei tule Jenkinsist (credentialsId)"
     pass "saladusi pole, credentialid Jenkinsist" ;;
-k06/triggers)
+jenkins/triggers)
     need_files k06-jenkins/Jenkinsfile
     code=$(perl -0pe 's#/\*.*?\*/##gs; s#(^|\s)//[^\n]*#$1#g' k06-jenkins/Jenkinsfile)
     grep -Eq 'triggers[[:space:]]*\{' <<< "$code" || fail "triggers { } plokk puudub"
     grep -Eq "pollSCM\(|cron\(|upstream\(" <<< "$code" || fail "pollSCM / cron / upstream puudub"
     pass "trigger olemas" ;;
-k06/docker)
+jenkins/docker)
     need_files k06-jenkins/Jenkinsfile k06-jenkins/Dockerfile
     code=$(perl -0pe 's#/\*.*?\*/##gs; s#(^|\s)//[^\n]*#$1#g' k06-jenkins/Jenkinsfile)
     grep -Eq 'docker build|docker\.build' <<< "$code" || fail "Docker image etapp puudub"

@@ -40,20 +40,31 @@ read lõpetavad kohe `SKIP` teatega (0 p, tööriistu ei laadita). K1–K3 jooks
 | K4 | validate | `bash autograde/check.sh k04 validate` | 30 |
 | K4 | provider, data, for_each, CPU, tagid, inventory | `bash autograde/check.sh k04 resources` | 30 |
 | K4 | BOONUS: moodul (IS2) | `bash autograde/check.sh k04 module` | 0 |
-| K5 | workflow + K3 failid | `bash autograde/check.sh k05 files` | 10 |
-| K5 | actionlint | `bash autograde/check.sh k05 actionlint` | 25 |
-| K5 | build + test (push, PR, Java 21, mvn verify) | `bash autograde/check.sh k05 build` | 15 |
-| K5 | needs, if, permissions, artefakt, Trivy, image ghcr.io-sse | `bash autograde/check.sh k05 structure` | 25 |
-| K5 | deploy self-hosted, environment, secrets, triggerid, /version | `bash autograde/check.sh k05 deploy` | 15 |
-| K5 | hügieen: saladused, @main, Node 20, Trivy SHA | `bash autograde/check.sh k05 hygiene` | 10 |
-| K6 | failid (Jenkinsfile, settings.xml, Dockerfile) | `bash autograde/check.sh k06 files` | 10 |
-| K6 | Build + Test + junit | `bash autograde/check.sh k06 stages` | 15 |
-| K6 | oma agent (label, mitte any), tools | `bash autograde/check.sh k06 agent` | 10 |
-| K6 | Sonar + quality gate (õppijapõhine projectKey) | `bash autograde/check.sh k06 quality` | 25 |
-| K6 | Nexus: upload + settings.xml mirror | `bash autograde/check.sh k06 nexus` | 15 |
-| K6 | saladusi pole, credentialid Jenkinsist | `bash autograde/check.sh k06 secrets` | 10 |
-| K6 | triggers (pollSCM/cron/upstream) | `bash autograde/check.sh k06 triggers` | 10 |
-| K6 | Docker image samast WAR-ist + koristus | `bash autograde/check.sh k06 docker` | 5 |
+| K5 | deployment.yaml ja service.yaml Gitis, kubeconfig väljas | `bash autograde/check.sh k05 files` | 15 |
+| K5 | Deployment ja NodePort Service valideeruvad, sildid klapivad | `bash autograde/check.sh k05 manifest` | 45 |
+| K5 | klastri olek logis (`k05-k8s/logid/*.txt`) | `bash autograde/check.sh k05 logid` | 40 |
+| K5 | boonus: Ingress | `bash autograde/check.sh k05 ingress` | 0 |
+| K5 | boonus: Argo CD Application | `bash autograde/check.sh k05 argocd` | 0 |
+| K6 | main.tf, web.yml, lukufail Gitis, state/tfvars väljas | `bash autograde/check.sh k06 files` | 20 |
+| K6 | fmt | `bash autograde/check.sh k06 fmt` | 10 |
+| K6 | validate | `bash autograde/check.sh k06 validate` | 20 |
+| K6 | AWS-i võtmeid Gitis pole | `bash autograde/check.sh k06 secrets` | 15 |
+| K6 | security group reeglitega, AMI data source, masin, inventory | `bash autograde/check.sh k06 resources` | 15 |
+| K6 | playbook changed=0 ja koristus logis | `bash autograde/check.sh k06 logid` | 20 |
+| lisa ci | workflow + K3 failid | `bash autograde/check.sh ci files` | 10 |
+| lisa ci | actionlint | `bash autograde/check.sh ci actionlint` | 25 |
+| lisa ci | build + test (push, PR, Java 21, mvn verify) | `bash autograde/check.sh ci build` | 15 |
+| lisa ci | needs, if, permissions, artefakt, Trivy, image ghcr.io-sse | `bash autograde/check.sh ci structure` | 25 |
+| lisa ci | deploy self-hosted, environment, secrets, triggerid, /version | `bash autograde/check.sh ci deploy` | 15 |
+| lisa ci | hügieen: saladused, @main, Node 20, Trivy SHA | `bash autograde/check.sh ci hygiene` | 10 |
+| lisa jenkins | failid (Jenkinsfile, settings.xml, Dockerfile) | `bash autograde/check.sh jenkins files` | 10 |
+| lisa jenkins | Build + Test + junit | `bash autograde/check.sh jenkins stages` | 15 |
+| lisa jenkins | oma agent (label, mitte any), tools | `bash autograde/check.sh jenkins agent` | 10 |
+| lisa jenkins | Sonar + quality gate (õppijapõhine projectKey) | `bash autograde/check.sh jenkins quality` | 25 |
+| lisa jenkins | Nexus: upload + settings.xml mirror | `bash autograde/check.sh jenkins nexus` | 15 |
+| lisa jenkins | saladusi pole, credentialid Jenkinsist | `bash autograde/check.sh jenkins secrets` | 10 |
+| lisa jenkins | triggers (pollSCM/cron/upstream) | `bash autograde/check.sh jenkins triggers` | 10 |
+| lisa jenkins | Docker image samast WAR-ist + koristus | `bash autograde/check.sh jenkins docker` | 5 |
 | K7 | manifestid + Application | `bash autograde/check.sh k07 files` | 10 |
 | K7 | kubeconform -strict | `bash autograde/check.sh k07 kubeconform` | 20 |
 | K7 | objektid, probe'id, resources, initContainers, init ConfigMap | `bash autograde/check.sh k07 objects` | 25 |
