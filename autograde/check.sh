@@ -494,12 +494,12 @@ k05/argocd)
 # ---------- K6 AWS käsurealt ----------
 # Kohustuslik 100 p: files 20, fmt 10, validate 20, secrets 15, resources 15, logid 20.
 k06/files)
-    need_files k06-aws/main.tf k06-aws/web.yml k06-aws/.terraform.lock.hcl
+    need_files k06-aws/main.tf k06-aws/.terraform.lock.hcl
     tracked=$(git ls-files k06-aws)
     [[ -n "$tracked" ]] || fail "k06-aws/ failid ei ole Gitis (git add)"
     bad=$(grep -E '\.tfstate|(^|/)terraform\.tfvars$|\.auto\.tfvars$|(^|/)\.terraform/|\.tfplan$|(^|/)inventory\.ini$' <<< "$tracked" || true)
     [[ -z "$bad" ]] || fail "need ei tohi olla Gitis: $(tr '\n' ' ' <<< "$bad")(git rm --cached …, lisa .gitignore'i)"
-    pass "main.tf, web.yml ja lukufail Gitis, state/tfvars/inventory väljas" ;;
+    pass "main.tf ja lukufail Gitis, state/tfvars/inventory väljas" ;;
 k06/fmt)
     need_files k06-aws/main.tf
     tool tofu
@@ -529,17 +529,25 @@ k06/resources)
     grep -q 'hashicorp/aws\|opentofu/aws' <<< "$code" || fail "provider aws puudub"
     grep -q 'resource "aws_instance"' <<< "$code" || fail "EC2 masin (aws_instance) puudub"
     grep -q 'resource "aws_security_group"' <<< "$code" || fail "security group puudub"
-    grep -q 'resource "aws_vpc_security_group_egress_rule"' <<< "$code" || fail "väljaminev reegel puudub: masin ei pääse internetti (osa 5)"
+    grep -q 'resource "aws_vpc_security_group_egress_rule"' <<< "$code" || fail "väljaminev reegel puudub: masin ei pääse internetti ega saa nginxi paigaldada"
     grep -Eq 'data "aws_(ssm_parameter|ami)"' <<< "$code" || fail "AMI ei tule data source'ist (number koodis vananeb)"
-    grep -q 'resource "local_file"' <<< "$code" || fail "inventory't ei tehta OpenTofu väljundist (local_file)"
-    pass "provider, security group koos reeglitega, AMI data source'ist, masin, inventory" ;;
+    grep -q 'user_data' <<< "$code" || fail "masinal puudub user_data, mis paneb lehe üles (osa 4)"
+    pass "provider, security group koos reeglitega, AMI data source'ist, masin ja user_data" ;;
+k06/ci)
+    wf=.github/workflows/k06-ci.yml
+    need_files "$wf"
+    git ls-files --error-unmatch "$wf" > /dev/null 2>&1 || fail "$wf ei ole Gitis (git add)"
+    code=$(grep -v '^\s*#' "$wf")
+    grep -Eq '^on:' <<< "$code" || fail "$wf: võti on: puudub, töövoog ei käivitu"
+    grep -q 'tofu.*fmt' <<< "$code" || fail "$wf: samm tofu fmt -check puudub"
+    grep -q 'tofu.*validate' <<< "$code" || fail "$wf: samm tofu validate puudub"
+    pass "töövoog kontrollib OpenTofu koodi (fmt, validate)" ;;
 k06/logid)
     logs=(k06-aws/logid/*.txt)
     [[ ${#logs[@]} -gt 0 ]] || fail "k06-aws/logid/*.txt puudub"
     all=$(cat "${logs[@]}")
-    grep -Eq 'changed=0 ' <<< "$all" || fail "logis pole playbook'i teist käivitust changed=0"
     grep -q 'tasulisi jääke pole' <<< "$all" || fail "logis pole koristuse tulemust TULEMUS: tasulisi jääke pole"
-    pass "teine käivitus changed=0 ja koristus tehtud" ;;
+    pass "koristus tehtud, tasulisi jääke pole" ;;
 
 # ---------- Lisaülesanne: GitHub Actions (endine K5; kasutus: check.sh ci <kontroll>) (asendab praegused k05/files, k05/actionlint, k05/stages) ----------
 # Kõik kontrollid loevad KÕIKI õppija workflow'sid (user_workflows), kommentaarid eemaldatakse enne grep'i.
